@@ -5,11 +5,12 @@ ATM assigns to each individual topic weights for several disease topics; each di
 
 # Generative process of ATM
 ![My Image](ATM_generative_process.png)
+
 We constructed a Bayesian hierarchical model to infer latent risk profiles for common diseases.  In summary, the model assumes there exist a few disease topics that underlie many common diseases.  Each topic is age-evolving and contain risk trajectories for all diseases considered. An individual's risk for each diseases is determined by the weights of all topics. The indices in this note are as follows:
-$$ s= 1,...,M; $$
-$$ n= 1,...,N_s; $$
-$$ i= 1,...,K; $$
-$$ j= 1,...,D; $$
+$$ s= 1,...,M; $$,
+$$ n= 1,...,N_s; $$,
+$$ i= 1,...,K; $$,
+$$ j= 1,...,D; $$,
 where $M$ is the number of subjects, $N_s$ is the number of records within $s^{th}$ subject, $K$ is number of topics, and $D$ is the total number of diseases we are interested in.
 The generative process (Supplementary Figure \ref{fig:generative}) is as follows: 
 
