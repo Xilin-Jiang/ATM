@@ -23,12 +23,12 @@ $$z_{sn} \sim Multi(\theta_s).$$
 - $\beta(t) \in \mathcal{F}(t)^{K \times D}$ is the topic which is $K \times D$ functions of age $t$. $\mathcal{F}(t)$ is the class of functions of $t$. At each plausible $t$, the following is satisfied:
 $$\sum_j \beta_{ij}(t) = 1.$$
 In practice we use softmax function to ensure above is true and add smoothness by constrain $\mathcal{F}(t)$ to be spline or polynomial functions:
-$$\beta_{ij}(t) = \frac{\exp(\boldsymbol{p}_{ij}^T \phi (t))}{\sum_{j = 1}^D \exp(\boldsymbol{p}_{ij}^T \phi (t))},$$
+$$\beta_{ij}(t) = \frac{\exp(\boldsymbol{p}_{ij}^T \phi (t))}{\sum_{j = 1}^D \exp(\boldsymbol{p}_{ij}^T \phi (t))}$$,
 where $\boldsymbol{p}_{ij} = \{ p_{ijd} \}, \; d = 1,2,...,P$; $P$ is the degree of freedom than controls the smoothness; $\phi (t)$ is polynomial and spline basis for age $t$.
 
 - $w \in \{1,2,...,D\}^{\sum_s N_s}$ are observed diagnoses. The $n^{th}$ diagnosis of $s^{th}$ individual $w_{sn}$ is sampled from the topic $\beta_{z_{sn}}(t)$ chosen by $z_{sn}$:
 $$w_{sn} \sim Multi(\boldsymbol{\beta}_{z_{sn}}(t_{sn})),$$
-here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis $ w_{sn}$.
+here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis $w_{sn}$.
 
 ## Estimate individual comorbidity weight using the comorbidity profiles inferred from UK Biobank.(XXXinsert code example here; use simulated data to show)
 
