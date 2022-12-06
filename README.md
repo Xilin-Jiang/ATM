@@ -34,3 +34,4 @@ here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis 
 
 ## Inferring comorbidity profiles from individual diagnostic data set. 
 (XXX this is computational expensive, therefore not only provide R package, also complie an executable)
+infer_age_topics.R contains code for an example run. 
