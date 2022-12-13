@@ -44,7 +44,7 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
     mutate(id = row_number()) %>%
     group_by(Ds_id) %>%
     group_split()
-
+  print("ATM RAM occupation: ")
   print(object.size(para$w), unit = "MB" , standard = "SI")
 
   # initiate beta
@@ -120,7 +120,7 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
     mutate(id = row_number()) %>%
     group_by(Ds_id) %>%
     group_split()
-
+  print("ATM RAM occupation: ")
   print(object.size(para$w), unit = "MB" , standard = "SI")
 
   # create an age matrix for each disease, it is a list same length as para$w, each of Ns-by-F matrix
@@ -467,17 +467,101 @@ update_age_depend_lda <- function(para){
   return(para)
 }
 
-wrapper_ATM <- function(rec_data, topic_num = 10, degree_free_num = 3, CVB_num = 5){
-  dir.create("Results")
+# basic VB methods functions (not used, but implemented during implementation for comparison)
+comp_lda_lb <- function(para){
+  # compute the lower bound for the whole dataset
+
+  # terms for cross-entropy
+  term1 <- para$M*(lgamma(sum(para$alpha)) - sum(lgamma(para$alpha)) ) +
+    sum( para$E_lntheta %*% (para$alpha - 1) )
+  term2 <- sapply(1:para$M,
+                  function(s) sum( para$E_zn[[s]] %*% para$E_lntheta[s,] )) %>% sum
+  # term3 <- sum(sapply(1:para$M, function(s) sum(para$E_zn[[s]] * log(para$beta_w[[s]]) ) ) )
+  # term3 could be fully vectorized using para$unlist_zn and para$beta_w_full
+  # term3 <- sum(para$unlist_zn * log(para$beta_w_full) )
+  term3 <- sum( log(para$beta_w_full^para$unlist_zn) ) # use this method to avoid numeric issue
+
+  # terms for entropy
+  term4 <- sum(sapply(1:para$M,
+                      function(s) lgamma(sum(para$alpha_z[s,])) - sum(lgamma(para$alpha_z[s,])))) +
+    sum((para$alpha_z - 1)*para$E_lntheta)
+  # term5 <- sum(sapply(1:para$M, function(s) sum( para$E_zn[[s]]*log(para$E_zn[[s]]) ) ) )
+  # term5 could be fully vectorized using para$unlist_zn
+  # term5 <- sum( para$unlist_zn*log(para$unlist_zn) )
+  term5 <- sum( log(para$unlist_zn^para$unlist_zn) ) # similarly, avoid numeric issue
+
+  return((term1 + term2 + term3 - term4 - term5))
+}
+
+comp_E_zn <- function(para){
+  # compute E-step for zn
+  # two layer of apply: outer layer is for documents s=1,..,M; saplly layer is for words in documents n=1,2,...Ns
+  para$E_zn <-sapply(1:para$M,
+                     function(s)
+                       (para$beta_w[[s]] %*% diag(exp(para$E_lntheta[s,]))  )/
+                       (para$beta_w[[s]]) %*% t(exp(para$E_lntheta[rep(s,para$K),])),
+                     simplify = FALSE)
+  # update the variables to facilitate computation
+  para$alpha_z <- sapply(1:para$M, function(s) para$alpha + colSums(para$E_zn[[s]])) %>% t
+  para$unlist_zn <- do.call(rbind, para$E_zn)
+  return(para)
+}
+
+comp_E_lntheta <- function(para){
+  # compute E-step for ln(theta)
+  para$E_lntheta <- sapply(1:para$M,
+                           function(s) digamma(para$alpha_z[s,]) -
+                             digamma(sum(para$alpha_z[s,]))) %>% t
+  return(para)
+}
+
+update_beta_basic_lda <- function(para){
+  # compute M-step for beta: basic case, direct maximize the upper bound
+  para$beta <- sapply(1:para$D, function(j) colSums(para$unlist_zn[para$ds_list[[j]]$id,]) ) %>% t
+  # normalize beta
+  para$beta <- sapply(1:para$K, function(i) para$beta[,i]/sum(para$beta[,i]))
+  # this beta_w parameter save the beta for each word: it is a list of M elements and each contain a K*Ns matrix
+  # para$beta_w <- lapply(para$w, function(w) para$beta[w$Ds_id,,drop=FALSE] )
+  para$beta_w_full <- para$beta[para$unlist_Ds_id$Ds_id,,drop=FALSE]
+  para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
+  return(para)
+}
+
+update_alpha <- function(para){
+  # compute M-step for alpha; optimize the dirichlet with Newton-Raphson method
+  para$lb_alpha <- function(alpha){
+    para$M*(lgamma(sum(alpha)) - sum(lgamma(para$alpha)) ) +
+      sum(colSums(para$E_lntheta) * (para$alpha - 1) )
+  }
+
+  para$grad_alpha <- function(alpha){
+    para$M*(digamma(sum(alpha)) - digamma(para$alpha))  +
+      colSums( para$E_lntheta )
+  }
+
+  para$hess_alpha <- function(alpha){
+    para$M*( trigamma(sum(alpha)) - diag(trigamma(alpha)) )
+  }
+  # para$optim_alpha <- maxBFGS(para$lb_alpha, grad = para$grad_alpha, start = para$alpha,
+  #                             constraints=list(ineqA = diag(nrow = para$K), ineqB = matrix(0,nrow = para$K)) )
+  para$optim_alpha <- maxNR(para$lb_alpha, grad = para$grad_alpha, hess = para$hess_alpha, start = para$alpha) # rep(10^(-5), para$K))
+
+  para$alpha <- para$optim_alpha$estimate
+
+  return(para)
+}
+
+
+wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, save_data = F){
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%
     summarise(occ = n())
   topics <- list()
   ELBOs <- list()
+  topic_weights <- list()
   for(cvb_rep in 1:CVB_num){
-    print(paste0("Male CVB inference number: ", cvb_rep))
+    print(paste0("CVB inference number: ", cvb_rep))
     para <- topic_init_age(rec_data, ds_list, topic_num, degree_free_num)
-    para$rep_ID <- args[3]
     # set the number of update
     para$max_itr <- 2000
     para$alpha <- rep(1, para$K)
@@ -509,9 +593,9 @@ wrapper_ATM <- function(rec_data, topic_num = 10, degree_free_num = 3, CVB_num =
     }
     topics[[cvb_rep]] <- para$pi_beta_basis
     ELBOs[[cvb_rep]]  <- para$lb
+    topic_weights[[cvb_rep]] <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
   }
   multi_runs <- list(topics, ELBOs)
-  save(multi_runs, file = paste0("Results/","multirun", CVB_num, "K",para$K,"_P",para$P, ".RData"))
   # find the best reps in the data
   lb_rep <- data_frame(reps = as.integer(), lower_bound = as.numeric())
   for(cvb_rep in 1:CVB_num){
@@ -526,7 +610,22 @@ wrapper_ATM <- function(rec_data, topic_num = 10, degree_free_num = 3, CVB_num =
 
   # save a smaller dataset
   model_output <- list(topics[[best_id]], ELBOs[[best_id]], para$D, para$M, para$K, para$P, lb_rep)
-  save(model_output, file = paste0("Results/","best_output_AgeLDA_RunNumber", CVB_num, "K",para$K,"_P",para$P,"_rep",para$rep_ID, ".RData"))
+  if(save_data){
+    dir.create("Results")
+    save(multi_runs, file = paste0("Results/","multirun", CVB_num, "K",para$K,"_P",para$P, ".RData"))
+    save(model_output, file = paste0("Results/","best_output_AgeLDA_RunNumber", CVB_num, "K",para$K,"_P",para$P, ".RData"))
+  }
+  output <- list()
+  output$topic_loadings <- topics[[best_id]]
+  output$topic_weights <- topic_weights[[best_id]]
+  output$ELBO_convergence <- ELBOs[[best_id]]
+  output$disease_number <-  para$D
+  output$patient_number <- para$M
+  output$topic_number <- para$K
+  output$topic_configuration <-para$P
+  output$multiple_run_ELBO_compare <-lb_rep
+  return(output)
 }
+
 
 

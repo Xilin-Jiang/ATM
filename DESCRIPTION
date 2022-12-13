@@ -14,7 +14,8 @@ Depends:
 LazyData: true
 Imports: 
     dplyr,
-    magrittr
+    magrittr,
+    reshape2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

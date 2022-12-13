@@ -4,7 +4,18 @@ Age-dependent topic modelling (ATM) is a method for inferring comorbidity profil
 ATM assigns to each individual topic weights for several disease topics; each disease topic reflects a set of diseases that tend to co-occur as a function of age, quantified by age-dependent *topic loadings* for each disease. The model assumes that for each disease diagnosis, a topic is sampled based on the individual’s *topic weights* (which sum to 1 across topics, for a given individual), and a disease is sampled based on the individual’s age and the age-dependent *topic loadings* (which sum to 1 across diseases, for a given topic at a given age). The model generalises the latent dirichlet allocation (LDA) model by allowing topic loadings for each topic to vary with age. 
 ![My Image](ATM_schematic.png)
 
-# Generative process of ATM
+## Installation
+
+You can install the development version of NetworkCOVID19 from [GitHub](https://github.com/) with:
+
+```r
+# install.packages("devtools")
+devtools::install_github("Xilin-Jiang/ATM")
+```
+
+## Quick start
+
+## Generative process of ATM
 ![My Image](ATM_generative_process.png)
 
 We constructed a Bayesian hierarchical model to infer latent risk profiles for common diseases.  In summary, the model assumes there exist a few disease topics that underlie many common diseases.  Each topic is age-evolving and contain risk trajectories for all diseases considered. An individual's risk for each diseases is determined by the weights of all topics. The indices in this note are as follows:
