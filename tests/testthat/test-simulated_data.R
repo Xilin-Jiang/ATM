@@ -18,7 +18,21 @@ test_that("Simulate genetic data", {
   disease2topic <- 0.1 # 2. causal disease SNP->D->T
   itr_effect <- 2 # 3. SNP*T->D
   topic2disease <- 2 # 4. SNP->D; SNP->T->D; topic to disease effect
-
   disease_number <- 20
-
+  rslts <- simulate_topics(topic_number = 2, disease2topic  = disease2topic, v2t = cont_v2t, pop_sz = 1000 )
+  para_sim <- rslts[[1]]
+  genetics_population <- rslts[[2]]
+  causal_disease <- rslts[[3]]
+  reslt_ds <- simulate_genetic_disease_from_topic(para_sim, genetics_population,causal_disease,
+                                                  disease_number = disease_number, itr_effect = itr_effect,
+                                                  topic2disease = topic2disease, v2t = cont_v2t)
+  rec_data <- reslt_ds[[1]]
+  disease_data <- longdata2diseasematrix(rec_data)
+  # testing the SNP -> Disease
+  ds1 <- disease_data %>%
+    select(eid, disease_number + 2) %>%
+    arrange(eid)
+  md1 <- lm(ds1[2][[1]] ~ genetics_population[,1:20])
+  # test if we could discover 25% of the disease causing variant at P=0.05
+  expect_gt(sum(summary(md1)$coefficients[2:21,4] < 0.05), 5)
 })

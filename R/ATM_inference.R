@@ -1,7 +1,12 @@
 # save all the inference related functions here
 topic_init_baseline <- function(rec_data, ds_list, topic_num){
+  # arrange the data stack by individual is very important as we need to make sure the matrix could be rejoined into a single matrix
   first_incidence_age <- rec_data %>%
-    arrange(eid)
+    arrange(eid) %>%
+    group_by(eid, diag_icd10) %>%
+    arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
+    slice(1) %>%
+    ungroup()
 
   # plot the number distribution of indiviudal diseases
   df_number_records <- first_incidence_age %>%
@@ -74,7 +79,11 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
 topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
   # arrange the data stack by individual is very important as we need to make sure the matrix could be rejoined into a single matrix
   first_incidence_age <- rec_data %>%
-    arrange(eid)
+    arrange(eid) %>%
+    group_by(eid, diag_icd10) %>%
+    arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
+    slice(1) %>%
+    ungroup()
 
   # plot the number distribution of indiviudal diseases
   df_number_records <- first_incidence_age %>%
@@ -172,7 +181,18 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 # functions for inferring topic weights from known topic loadings
 ##########################################################
 # function that making use of inferred topic to estimate individual weights
-topics2weights <- function(data, ds_list, degree_freedom, topics){
+#' Mapping individuals to fixed topic loading
+#'
+#' @param data
+#' @param ds_list
+#' @param degree_freedom
+#' @param topics
+#'
+#' @return
+#' @export
+#'
+#' @examples
+loading2weights <- function(data, ds_list, degree_freedom = 5, topics = UKB_HES_10topics){
   para <- topic_init_age(data, ds_list, dim(topics)[length(dim(topics))], degree_freedom)
   # update beta_w: list of Ns-by-K
   para$beta_w_full <- apply(topics, 3, function(x)
@@ -552,6 +572,25 @@ update_alpha <- function(para){
 }
 
 
+#' Run ATM on diagnosis data to infer topic loadings and topic weights. Note one run of ATM on 100K individuals would take ~30min (defualt is 5 runs and pick the best fit);
+#' if the data set is small and the goal is to infer patient-level topic weights (i.e. assign comorbidity profiles to individuals based on the disedases),
+#' please use loading2weights.
+#'
+#' @param rec_data A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids, second column is the disease code;
+#' third column is the age at diagnosis. Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
+#' within each individual, the rest will be ignored.
+#' @param topic_num Number of topics to infer.
+#' @param degree_free_num control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial, cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.
+#' @param CVB_num Number of runs with random initialization. The final output will be the run with highest ELBO value.
+#' @param save_data A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.
+#'
+#' @return Reture a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
+#' patient_list (list of eid which correspond to rows of topic_weights), ds_list (gives the ordering of diseases in the topic_loadings object), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
+#' topic_configuration (control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial,
+#' cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.), multiple_run_ELBO_compare (ELBO of each runs).
+#' @export
+#'
+#' @examples ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
 wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, save_data = F){
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%
@@ -619,6 +658,8 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
   output$topic_loadings <- topics[[best_id]]
   output$topic_weights <- topic_weights[[best_id]]
   output$ELBO_convergence <- ELBOs[[best_id]]
+  output$ds_list <- para$list_above500occu
+  output$patient_list <- para$eid
   output$disease_number <-  para$D
   output$patient_number <- para$M
   output$topic_number <- para$K
@@ -626,6 +667,19 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
   output$multiple_run_ELBO_compare <-lb_rep
   return(output)
 }
+
+# function to turn rec_data to a matrix of disease
+longdata2diseasematrix <- function(rec_data){
+  ds_list <- rec_data %>%
+    group_by(diag_icd10) %>%
+    summarise(occ = n())
+  disease_data <- rec_data %>%
+    select(-age_diag) %>%
+    mutate(disease = 1, diag_icd10 = factor(diag_icd10, levels = ds_list$diag_icd10)) %>%
+    pivot_wider(names_from = diag_icd10, values_from = disease,values_fill = 0, names_sort = T)
+  return(disease_data)
+}
+
 
 
 

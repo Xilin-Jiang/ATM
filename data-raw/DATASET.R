@@ -23,6 +23,9 @@ load(paste0(DIR,temp[rep_id]))
 UKB_HES_10topics <- model_output[[1]]
 usethis::use_data(UKB_HES_10topics, overwrite = TRUE)
 
+# code to prepare `UKB_349_disease`
+UKB_349_disease <- read.csv("~/Desktop/comorbidity/Multi-morbidity_biobank/listAbove1000include_deaths_PheCode.csv")
+usethis::use_data(UKB_349_disease, overwrite = TRUE)
 
 # code to prepare `HES_age_example` data set
 rec_data <- read.csv("~/Desktop/comorbidity/Multi-morbidity_biobank/rec2subjectAbove1000occur_include_death_PheCode.csv")
