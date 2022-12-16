@@ -14,6 +14,14 @@ devtools::install_github("Xilin-Jiang/ATM")
 ```
 
 ## Quick start
+Run ATM on diagnosis data to infer topic loadings and topic weights from diagnosis data. Note one run of ATM on 100K individuals would take ~30min (defualt is 5 runs and pick the best fit). If the data set is small and the goal is to infer patient-level topic weights (i.e. assign comorbidity profiles to individuals based on the disedases), please use loading2weights. The input data should be format data as HES_age_example; first column is individual ids, second column is the disease code; third column is the age at diagnosis. 
+
+Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease within each individual, the rest will be ignored.
+
+```r
+# head(HES_age_example)
+ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
+```
 
 ## Generative process of ATM
 ![My Image](ATM_generative_process.png)
