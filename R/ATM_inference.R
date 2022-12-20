@@ -181,19 +181,23 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 # functions for inferring topic weights from known topic loadings
 ##########################################################
 # function that making use of inferred topic to estimate individual weights
-#' Mapping individuals to fixed topic loading
+#' Mapping individuals to fixed topic loadings.
 #'
-#' @param data
-#' @param ds_list
-#' @param degree_freedom
-#' @param topics
-#'
+#' @param data the set of diseases, formatted same way as HES_age_example
+#' @param ds_list a list of diseases that correspond to the topic loadings that patients are mapped to
+#' formatted as UKB_349_disease; default is set to be UKB_349_disease.
+#' @param topics The topics that are used to map patients. Default is set to be UKB_HES_10topics,
+#' which are the inferred topics from 349 Phecodes from the UK Biobank HES data.
+#' Details of these topics are available in the paper "Age-dependent topic modelling of
+#' comorbidities in UK Biobank identifies disease subtypes with differential genetic risk".
 #' @return
 #' @export
 #'
 #' @examples
-loading2weights <- function(data, ds_list, degree_freedom = 5, topics = UKB_HES_10topics){
-  para <- topic_init_age(data, ds_list, dim(topics)[length(dim(topics))], degree_freedom)
+loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10topics){
+  data <- data %>%
+    filter(diag_icd10 %in% ds_list$diag_icd10)
+  para <- topic_init_age(data, ds_list, dim(topics)[length(dim(topics))], degree_free_num = 5) # for internal note: degree_free_num doesn't really matter in this case
   # update beta_w: list of Ns-by-K
   para$beta_w_full <- apply(topics, 3, function(x)
     x[as.matrix(select(para$unlist_Ds_id, age_diag, Ds_id))])

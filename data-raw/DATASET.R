@@ -20,7 +20,9 @@ rep_id <- order(lb_rep$lower_bound, decreasing = T)[1]
 
 load(paste0(DIR,temp[rep_id]))
 ### save the rec2CVB0_model_output_PheCode_age_dependent_K10_P5_rep10.RData as UKB_HES_10topics
-UKB_HES_10topics <- model_output[[1]]
+load(paste0(DIR, "Run_2rec_PheCode_age_dependent_K10_P5_rep10.RData"))
+# UKB_HES_10topics <- model_output[[1]]
+UKB_HES_10topics <- para$pi_beta_basis
 usethis::use_data(UKB_HES_10topics, overwrite = TRUE)
 
 # code to prepare `UKB_349_disease`
@@ -39,3 +41,5 @@ HES_age_example <- rec_data %>%
   sample_frac(0.5) %>%
   ungroup()
 usethis::use_data(HES_age_example, overwrite = TRUE)
+
+# mapping file between ICD2Phecode

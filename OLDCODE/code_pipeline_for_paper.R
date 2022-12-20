@@ -911,7 +911,7 @@ plt <- ggplot() +
 ggsave("~/Desktop/comorbidity/paper_writing/Production_figures/topic_compression.png",plt, width = 6, height = 10)
 
 ###############################################
-# Figure 3: Topic overview: save topics (not normalised)
+# Figure 3: Topic overview: save topics loadings (not normalised)
 ################################################
 # first find the best rep
 K <- 10
