@@ -6,7 +6,7 @@ ATM assigns to each individual topic weights for several disease topics; each di
 
 ## Installation
 
-You can install the development version of NetworkCOVID19 from [GitHub](https://github.com/) with:
+You can install the development version of ATM from [GitHub](https://github.com/ATM) with:
 
 ```r
 # install.packages("devtools")
