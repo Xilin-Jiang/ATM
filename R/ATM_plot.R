@@ -1,5 +1,31 @@
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
+                                      "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+                                      # set the commonly used color
+blue <- cbPalette[6]
+red <- cbPalette[7]
+green <- cbPalette[4]
+orange <- cbPalette[2]
+grey <- cbPalette[1]
+yellow <- cbPalette[5]
+purple <- cbPalette[8]
+skyblue <- cbPalette[3]
 # plot topic loadings
-plot_age_topics <- function(icd10, trajs,  pal_age_vector, plot_title, start_age = 30, top_ds = 10){
+#' Title plot the topic loadings across age
+#'
+#' @param disease_names
+#' @param trajs
+#' @param plot_title
+#' @param start_age
+#' @param top_ds
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_age_topics <- function(disease_names, trajs,  plot_title, start_age = 30, top_ds = 10){
+  pal_age <- colorRampPalette(c(blue, red, orange, purple, green))
+  pal_age_vector <- pal_age(para$D)
   # dominant_ds_id <- which(sapply(1:dim(trajs)[2], function(j) mean(trajs[,j], na.rm = T) > thre_pick))
   dominant_ds_id <- order(sapply(1:dim(trajs)[2], function(j) mean(trajs[,j], na.rm = T)), decreasing = T)[1:top_ds]
   # if nothing pass the threshold
@@ -9,7 +35,7 @@ plot_age_topics <- function(icd10, trajs,  pal_age_vector, plot_title, start_age
   df_topics <- data.frame(age=start_age:(start_age + dim(trajs)[1] - 1), inferred_topics =  filtered_topics)
   legend_xpos <- apply(filtered_topics, 2, which.max)
   legend_ypos <- sapply(1:length(dominant_ds_id), function(x) filtered_topics[legend_xpos[x],x])
-  legend <- data.frame( ds_label = as.character(icd10[dominant_ds_id]),
+  legend <- data.frame( ds_label = as.character(disease_names[dominant_ds_id]),
                         x_pos = legend_xpos + start_age ,
                         y_pos = legend_ypos )
   col_ds <- pal_age_vector[dominant_ds_id]

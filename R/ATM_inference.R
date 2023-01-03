@@ -81,8 +81,9 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
   first_incidence_age <- rec_data %>%
     arrange(eid) %>%
     group_by(eid, diag_icd10) %>%
-    arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
+    filter(n() == 1 | age_diag == min(age_diag) ) %>% # this row is highly optimized, a lot faster the slice_min ### don't change
     slice(1) %>%
+    # arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
     ungroup()
 
   # plot the number distribution of indiviudal diseases
@@ -684,6 +685,50 @@ longdata2diseasematrix <- function(rec_data){
     mutate(disease = 1, diag_icd10 = factor(diag_icd10, levels = ds_list$diag_icd10)) %>%
     pivot_wider(names_from = diag_icd10, values_from = disease,values_fill = 0, names_sort = T)
   return(disease_data)
+}
+
+# function to map icd10 to phecode
+#' Title mapping the disease code from icd10 to phecode; the mapping are based on https://phewascatalog.org/phecodes
+#'
+#' @param rec_data input data which use ICD10 encoding; please refer to the internal example data `HES_icd10_example` for the formatting of the data.
+#'
+#' @return a data frame where most entries are mapped from ICD10 code to phecode
+#' @export
+#'
+#' @examples phecode_data <- icd2phecode(HES_icd10_example)
+icd2phecode <- function(rec_data){
+  short_icd10cm <- phecode_icd10cm %>%
+    mutate(ICD10 = substring(ICD10, 1,4)) %>%
+    left_join(non_one2one_map, by = "phecode") %>%
+    group_by(ICD10) %>%
+    arrange( desc(occ), .by_group = T, ) %>%
+    slice(1) %>%
+    ungroup() %>%
+    rename(parent_phecode = phecode)
+
+  new_data <- rec_data %>%
+    select(eid, diag_icd10, age_diag) %>%
+    filter(str_detect(diag_icd10, "^[A-N]")) %>%
+    left_join(phecode_icd10cm, by = c("diag_icd10" = "ICD10")) %>%
+    mutate(diag_icd10 = substring(diag_icd10, 1,4)) %>%
+    left_join(phecode_icd10, by = c("diag_icd10" = "ICD10"))  %>%
+    left_join(short_icd10cm, by = c("diag_icd10" = "ICD10"))
+
+  not_mapped <- new_data %>% filter(is.na(phecode), is.na(PheCode), is.na(parent_phecode)) %>% dim
+  print(paste0((1-not_mapped[1]/dim(new_data)[1])*100 ,"% of the records are mapped"))
+
+  new_data <- new_data %>%
+    mutate(phecode = if_else(is.na(phecode), parent_phecode, phecode)) %>%
+    mutate(PheCode = if_else(is.na(PheCode), phecode, PheCode)) %>%
+    filter(!is.na(PheCode)) %>%
+    select(eid, PheCode, age_diag) %>%
+    rename(diag_icd10 = PheCode) %>%
+    group_by(eid, diag_icd10) %>%
+    filter(n() == 1 | age_diag == min(age_diag) ) %>% # this row is highly optimized, a lot faster the slice_min ### don't change
+    slice(1) %>%
+    ungroup()
+
+  return(new_data)
 }
 
 

@@ -42,4 +42,55 @@ HES_age_example <- rec_data %>%
   ungroup()
 usethis::use_data(HES_age_example, overwrite = TRUE)
 
-# mapping file between ICD2Phecode
+# code to create `phecode_icd10cm`, `phecode_icd10`, and `disease_info_phecode_icd10`; mapping between ICD2Phecode
+# mapping all ICD-10 to phecodes; need to first deal with the non-mapping (one icd10 to different phecode)
+DIR <- "~/Desktop/comorbidity/Multi-morbidity_biobank/"
+non_one2one_map <- read.csv(paste0(DIR, "Phecode_map_v1_2_icd10cm_beta.csv")) %>%
+  group_by(phecode) %>%
+  summarise(occ = n())
+
+phecode_icd10cm <- read.csv(paste0(DIR, "Phecode_map_v1_2_icd10cm_beta.csv")) %>%
+  left_join(non_one2one_map, by = "phecode") %>%
+  group_by(icd10cm) %>%
+  arrange( desc(occ), .by_group = T ) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(ICD10 = sub("[.]","",icd10cm)) %>% # remove the dots
+  select(ICD10, phecode,exclude_range, exclude_name)
+usethis::use_data(phecode_icd10cm, overwrite = TRUE)
+
+phecode_icd10 <- read.csv(paste0(DIR,"phecode_icd10.csv")) %>%
+  left_join(non_one2one_map, by = c("PheCode" = "phecode")) %>%
+  group_by(ICD10) %>%
+  arrange( desc(occ), .by_group = T, ) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(ICD10 = sub("[.]","",ICD10)) %>% # remove the dots
+  select(ICD10, PheCode, Excl..Phecodes, Excl..Phenotypes)
+usethis::use_data(phecode_icd10, overwrite = TRUE)
+
+# save a phecode classifications for future plotting
+disease_info_phecode_icd10 <- read.csv(paste0(DIR, "Phecode_map_v1_2_icd10cm_beta.csv")) %>%
+  group_by(phecode) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(ICD10 = sub("[.]","",icd10cm)) %>% # remove the dots
+  select(ICD10, phecode, phecode_str, exclude_range, exclude_name) %>%
+  rename(phenotype = phecode_str)
+usethis::use_data(disease_info_phecode_icd10, overwrite = TRUE)
+
+# save an icd10 rec_data as an example
+# code to prepare `HES_icd10_example` data set
+rec_data <- read.csv("~/Desktop/comorbidity/Multi-morbidity_biobank/rec2subjectAbove500occur_ICDA2N.csv")
+sample_eid <- rec_data %>%
+  group_by(eid) %>%
+  summarise(per_patient_diag = n()) %>%
+  filter(per_patient_diag > 10)
+HES_icd10_example <- rec_data %>%
+  filter(eid %in% sample_eid$eid) %>%
+  group_by(eid) %>%
+  sample_frac(0.5) %>%
+  ungroup()
+usethis::use_data(HES_icd10_example, overwrite = TRUE)
+
+
