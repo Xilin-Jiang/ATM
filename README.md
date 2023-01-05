@@ -23,6 +23,9 @@ Note for each individual, we only keep the first onset of each diseases. Therefo
 ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
 ```
 
+## Internal data example
+We provide example simulated data along with the pacakage. `r UKB_349_disease` is the list of 349 diseases (Phecode) that have more than 1000 incidences in the UK Biobank HES data. `r HES_age_example` is an example data simulated using the comorbidity distribution in UK Biobank; for inferring disease topics using ATM, you should format the data as `r HES_age_example`, which requires individual id, disease diagnosis, and age-at-diagnosis.  `r UKB_HES_10topics` is the inferred optimal disease topic from UK Biobank HES data set, using the 349 diseases.  
+
 ## Generative process of ATM
 ![My Image](ATM_generative_process.png)
 

@@ -11,9 +11,9 @@ yellow <- cbPalette[5]
 purple <- cbPalette[8]
 skyblue <- cbPalette[3]
 # plot topic loadings
-#' Title plot the topic loadings across age
+#' Title plot the topic loadings across age.
 #'
-#' @param disease_names
+#' @param disease_names the list of disease names to show on the plot
 #' @param trajs
 #' @param plot_title
 #' @param start_age
