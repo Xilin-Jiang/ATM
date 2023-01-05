@@ -23,6 +23,12 @@ Note for each individual, we only keep the first onset of each diseases. Therefo
 ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
 ```
 
+If the goal is obtain the  *topic weights* for a group of individuals to learn about their comorbidity profile, there is no need to infer the comorbidity. Following code maps diagnosis history (contained in the example data `HES_age_example`) to the optimal disease topics inferred from UK Biobank HES data. 
+```r
+new_weights <- loading2weights(HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
+```
+`UKB_HES_10topics` is the internal topics of the package. You could substitute it to other disease topics, with the same data format (a tensor of shape $age \times disease_number \times topic_number$). The output will be the topic weights of each individual, representing the comorbidity profile.  
+
 ## Internal data example
 We provide example simulated data along with the pacakage. `UKB_349_disease` is the list of 349 diseases (Phecode) that have more than 1000 incidences in the UK Biobank HES data. `HES_age_example` is an example data simulated using the comorbidity distribution in UK Biobank; for inferring disease topics using ATM, you should format the data as `HES_age_example`, which requires individual id, disease diagnosis, and age-at-diagnosis.  `UKB_HES_10topics` is the inferred optimal disease topic from UK Biobank HES data set, using the 349 diseases.
 

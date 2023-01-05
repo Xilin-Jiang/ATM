@@ -194,7 +194,7 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 #' @return a data frame with the first column being the individual id, other columns are the topic weights mapped to the topic loadings.
 #' @export
 #'
-#' @examples
+#' @examples new_weights <- loading2weights(HES_age_example)
 loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10topics){
   data <- data %>%
     filter(diag_icd10 %in% ds_list$diag_icd10)
