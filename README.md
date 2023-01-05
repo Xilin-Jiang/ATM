@@ -24,7 +24,9 @@ ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
 ```
 
 ## Internal data example
-We provide example simulated data along with the pacakage. `r UKB_349_disease` is the list of 349 diseases (Phecode) that have more than 1000 incidences in the UK Biobank HES data. `r HES_age_example` is an example data simulated using the comorbidity distribution in UK Biobank; for inferring disease topics using ATM, you should format the data as `r HES_age_example`, which requires individual id, disease diagnosis, and age-at-diagnosis.  `r UKB_HES_10topics` is the inferred optimal disease topic from UK Biobank HES data set, using the 349 diseases.  
+We provide example simulated data along with the pacakage. `UKB_349_disease` is the list of 349 diseases (Phecode) that have more than 1000 incidences in the UK Biobank HES data. `HES_age_example` is an example data simulated using the comorbidity distribution in UK Biobank; for inferring disease topics using ATM, you should format the data as `HES_age_example`, which requires individual id, disease diagnosis, and age-at-diagnosis.  `UKB_HES_10topics` is the inferred optimal disease topic from UK Biobank HES data set, using the 349 diseases.
+
+We recommend using Phecode for ATM to reduce coding redundancy in coding system such as ICD-10. To map from ICD-10 code to Phecode, use function `icd2phecode`. `icd2phecode` make use of ICD-10 to phecode mapping which are saved as internal data in ATM package: `phecode_icd10cm` maps between ICD-10-CM to Phecode; `phecode_icd10` maps between ICD-10 to Phecode; `disease_info_phecode_icd10` saves the disease names of 1755 Phecodes, use `UKB_349_disease %>% left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" ))`.  
 
 ## Generative process of ATM
 ![My Image](ATM_generative_process.png)
