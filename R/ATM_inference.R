@@ -643,11 +643,11 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
   }
   multi_runs <- list(topics, ELBOs)
   # find the best reps in the data
-  lb_rep <- data_frame(reps = as.integer(), lower_bound = as.numeric())
+  lb_rep <- tibble::tibble(reps = as.integer(), lower_bound = as.numeric())
   for(cvb_rep in 1:CVB_num){
     cvrg_lb <-  ELBOs[[cvb_rep]] %>%
       filter(!is.na(Lower_bound)) %>%
-      dplyr::slice_tail(1) %>%
+      dplyr::slice_tail(n = 1) %>%
       pull(2)
     lb_rep <- lb_rep %>%
       dplyr::add_row(reps = cvb_rep, lower_bound = cvrg_lb)

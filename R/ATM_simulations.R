@@ -44,12 +44,12 @@ simulate_basic_topic_data <- function(sample_sz, topic_number, disease_number, o
   # build dataframes for computation
   para$unlist_Ds_id <- bind_rows(para$w)
   para$ds_list <- para$unlist_Ds_id %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     group_by(Ds_id) %>%
     dplyr::group_split()
 
   para$patient_lst <- para$unlist_Ds_id %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     select(eid, id) %>%
     group_by(eid) %>%
     dplyr::group_split(.keep = F) %>%
@@ -129,11 +129,11 @@ simulate_age_topic_data <- function(sample_sz, topic_number,
   para$unlist_Ds_id <- bind_rows(para$w)
   para$ds_list <- para$unlist_Ds_id %>%
     select(-eid) %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     group_by(Ds_id) %>%
     dplyr::group_split()
   para$patient_lst <- para$unlist_Ds_id %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     select(eid, id) %>%
     group_by(eid) %>%
     dplyr::group_split(.keep = F) %>%
