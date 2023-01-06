@@ -66,19 +66,19 @@ prediction_onebyone <- function(testing_data, ds_list, para_training, max_predic
     if(predict_num == max_predict){
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
-        slice(predict_num:n()) %>%
-        ungroup
+        dplyr::slice(predict_num:n()) %>%
+        dplyr::ungroup
     }else{
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
-        slice(predict_num) %>%
-        ungroup
+        dplyr::slice(predict_num) %>%
+        dplyr::ungroup
     }
 
     estimating_test_set <- testing_data_included %>%
       group_by(eid) %>%
-      slice(1:(predict_num-1)) %>%
-      ungroup
+      dplyr::slice(1:(predict_num-1)) %>%
+      dplyr::ungroup
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para$beta, each = 81),dim =  c(81, para$D, para$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
@@ -174,19 +174,19 @@ prediction_OR_onebyone <- function(testing_data, ds_list, para_training, max_pre
     if(predict_num == max_predict){
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
-        slice(predict_num:n()) %>%
-        ungroup
+        dplyr::slice(predict_num:n()) %>%
+        dplyr::ungroup
     }else{
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
-        slice(predict_num) %>%
-        ungroup
+        dplyr::slice(predict_num) %>%
+        dplyr::ungroup
     }
 
     estimating_test_set <- testing_data_included %>%
       group_by(eid) %>%
-      slice(1:(predict_num-1)) %>%
-      ungroup
+      dplyr::slice(1:(predict_num-1)) %>%
+      dplyr::ungroup
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para_training$beta, each = 81),dim =  c(81, para_training$D, para_training$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
@@ -284,19 +284,19 @@ save_prediction_logics <- function(testing_data, ds_list, para_training, max_pre
     if(predict_num == max_predict){
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
-        slice(predict_num:n()) %>%
-        ungroup
+        dplyr::slice(predict_num:n()) %>%
+        dplyr::ungroup
     }else{
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
-        slice(predict_num) %>%
-        ungroup
+        dplyr::slice(predict_num) %>%
+        dplyr::ungroup
     }
 
     estimating_test_set <- testing_data_included %>%
       group_by(eid) %>%
-      slice(1:(predict_num-1)) %>%
-      ungroup
+      dplyr::slice(1:(predict_num-1)) %>%
+      dplyr::ungroup
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para$beta, each = 81),dim =  c(81, para$D, para$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
@@ -361,11 +361,11 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
     # (i.e. target disease happen to be the first one; no way to predict!)
     targe_age_distribution <- cases_data %>%
       group_by(eid) %>%
-      slice(1)
+      dplyr::slice(1)
     control_eid <- testing_data %>%
       anti_join(cases_eid, by = "eid") %>%
       group_by(eid) %>%
-      slice(1) %>%
+      dplyr::slice(1) %>%
       select(eid)
     control_eid$target_age <- sample(targe_age_distribution$target_age, dim(control_eid)[1], replace = T)
 
@@ -376,24 +376,24 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
     # save the case and control outcomes; save the age of the last event before target for computing area
     cases_eid <- cases_data %>%
       group_by(eid) %>%
-      slice_tail(n = 1) %>%
+      dplyr::slice_tail(n = 1) %>%
       mutate(outcome = 1) %>%
       select(eid, outcome, age_diag)
     control_eid <- control_data %>%
       group_by(eid) %>%
-      slice_tail(n = 1) %>%
+      dplyr::slice_tail(n = 1) %>%
       mutate(outcome = 0) %>%
       select(eid, outcome, age_diag)
     outcomes <- bind_rows(cases_eid, control_eid) %>%
       left_join(survive_age, by = "eid") %>%
       mutate(age_diag = round(age_diag), survive_year = round(survive_year))
     # we are underestimate the score for the cases, as some of them died of the disease
-    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 1) %>% ungroup %>% summarise(mean(age_gap))
-    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 0) %>% ungroup %>% summarise(mean(age_gap))
+    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 1) %>% dplyr::ungroup %>% summarise(mean(age_gap))
+    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 0) %>% dplyr::ungroup %>% summarise(mean(age_gap))
     # below is how we estimate the area under curve as well as the
     estimating_test_set <- bind_rows(cases_data, control_data) %>%
       select(- target_age) %>%
-      ungroup()
+      dplyr::ungroup()
 
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para_training$beta, each = 81),dim =  c(81, para_training$D, para_training$K) )
@@ -449,10 +449,10 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
     outcomes$risk_3year_mean <- risk_3year_mean/sd(risk_3year_mean)
     outcomes$risk_point <- risk_point/sd(risk_3year_mean)
     # using pROC package
-    AUC_methods[j,1] <- auc(outcomes$outcome,outcomes$risk_n_sum )
-    AUC_methods[j,2] <- auc(outcomes$outcome,outcomes$risk_n_mean )
-    AUC_methods[j,3] <- auc(outcomes$outcome,outcomes$risk_3year_mean )
-    AUC_methods[j,4] <- auc(outcomes$outcome,outcomes$risk_point )
+    AUC_methods[j,1] <- pROC::auc(outcomes$outcome,outcomes$risk_n_sum )
+    AUC_methods[j,2] <- pROC::auc(outcomes$outcome,outcomes$risk_n_mean )
+    AUC_methods[j,3] <- pROC::auc(outcomes$outcome,outcomes$risk_3year_mean )
+    AUC_methods[j,4] <- pROC::auc(outcomes$outcome,outcomes$risk_point )
 
     LogORestimates[j,] <- summary(glm(outcomes$outcome~ outcomes$risk_n_sum, family = binomial))$coefficients[2,]
   }
@@ -493,12 +493,12 @@ LASSO_predict <- function(rec_data, para){
 
     training_targe_age_distribution <- training_cases_data %>%
       group_by(eid) %>%
-      slice(1)
+      dplyr::slice(1)
 
     training_control_eid <- training_data %>%
       anti_join(cases_training_eid, by = "eid") %>%
       group_by(eid) %>%
-      slice(1) %>%
+      dplyr::slice(1) %>%
       select(eid)
 
     training_control_eid$target_age <- sample(training_targe_age_distribution$target_age, dim(training_control_eid)[1], replace = T)
@@ -509,12 +509,12 @@ LASSO_predict <- function(rec_data, para){
     training_set <- bind_rows(training_cases_data, training_control_data)
     training_cases_eid <- training_cases_data %>%
       group_by(eid) %>%
-      slice_tail(n = 1) %>%
+      dplyr::slice_tail(n = 1) %>%
       mutate(outcome = 1) %>%
       select(eid, outcome, age_diag)
     training_control_eid <- training_control_data %>%
       group_by(eid) %>%
-      slice_tail(n = 1) %>%
+      dplyr::slice_tail(n = 1) %>%
       mutate(outcome = 0) %>%
       select(eid, outcome, age_diag)
     training_eid <- bind_rows(training_cases_eid, training_control_eid)
@@ -532,7 +532,7 @@ LASSO_predict <- function(rec_data, para){
     testing_control_eid <- testing_data %>%
       anti_join(testing_cases_eid, by = "eid") %>%
       group_by(eid) %>%
-      slice(1) %>%
+      dplyr::slice(1) %>%
       select(eid)
 
     testing_cases_data <- testing_cases_eid %>% # select all disease that has a diagnosis that are earlier than target!
@@ -541,7 +541,7 @@ LASSO_predict <- function(rec_data, para){
 
     targe_age_distribution <- testing_cases_data %>%
       group_by(eid) %>%
-      slice(1)
+      dplyr::slice(1)
 
     testing_control_eid$target_age <- sample(targe_age_distribution$target_age, dim(testing_control_eid)[1], replace = T)
 
@@ -553,12 +553,12 @@ LASSO_predict <- function(rec_data, para){
     # save the case and control outcomes; save the age of the last event before target for computing area
     testing_cases_eid <- testing_cases_data %>%
       group_by(eid) %>%
-      slice_tail(n = 1) %>%
+      dplyr::slice_tail(n = 1) %>%
       mutate(outcome = 1) %>%
       select(eid, outcome, age_diag)
     testing_control_eid <- testing_control_data %>%
       group_by(eid) %>%
-      slice_tail(n = 1) %>%
+      dplyr::slice_tail(n = 1) %>%
       mutate(outcome = 0) %>%
       select(eid, outcome, age_diag)
     testing_eid <- bind_rows(testing_cases_eid, testing_control_eid)
@@ -571,7 +571,7 @@ LASSO_predict <- function(rec_data, para){
     spread_data <- bind_rows(training_set, testing_set) %>%
       mutate(age_diag = 1) %>%
       select(-target_age) %>%
-      spread(key = diag_icd10, value = age_diag, fill = 0)
+      dplyr::spread(key = diag_icd10, value = age_diag, fill = 0)
     # mutate(across(2:para$D, scale)) # normalise each column
 
     training_spread <- training_eid %>%
@@ -606,9 +606,9 @@ LASSO_predict <- function(rec_data, para){
       cvfit_testing <- cv.glmnet(x, y_train, alpha = 1, family = "binomial")
       coefs[[itr]] <- as.matrix(coef(cvfit_testing, s = cvfit_testing$lambda.min)[2:(dim(x)[2]+1)])
       row.names(coefs[[itr]]) <- row.names(coef(cvfit_testing, s = cvfit_testing$lambda.min))[2:(dim(x)[2]+1)]
-      scores[,itr] <- predict(cvfit_testing, newx = predict_x, s = "lambda.min")
+      scores[,itr] <- stats::predict(cvfit_testing, newx = predict_x, s = "lambda.min")
     }
-    AUC_per_ds[j,1] <- auc(y_test, rowSums(scores))
+    AUC_per_ds[j,1] <- pROC::auc(y_test, rowSums(scores))
     coefficients[[j]] <- do.call(rbind, coefs)
   }
   return(list(AUC_per_ds, coefficients))

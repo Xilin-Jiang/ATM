@@ -13,16 +13,24 @@ skyblue <- cbPalette[3]
 # plot topic loadings
 #' Title plot the topic loadings across age.
 #'
-#' @param disease_names the list of disease names to show on the plot
-#' @param trajs
-#' @param plot_title
-#' @param start_age
-#' @param top_ds
+#' @param disease_names the list of disease names, ordered as the topic.
+#' @param trajs one disease topic, which should be a matrix of age-by-disease.
+#' @param plot_title the title of the figure.
+#' @param start_age starting age of the matrix, default 30.
+#' @param top_ds How many disease to show, default is 10. This will filter the disease by
+#' the average topic laodings across age and pick the top.
 #'
-#' @return
+#' @return a ggplot object of the topic loading.
 #' @export
 #'
-#' @examples
+#' @examples disease_list <- UKB_349_disease %>%
+#' left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) %>%
+#' pull(phenotype)
+#' topic_id <- 1 # plot the first topic
+#' plot_age_topics(disease_names = disease_list,
+#'         trajs = UKB_HES_10topics[30:80,,topic_id],
+#'         plot_title = paste0("topic ", topic_id),
+#'         top_ds = 7)
 plot_age_topics <- function(disease_names, trajs,  plot_title, start_age = 30, top_ds = 10){
   pal_age <- colorRampPalette(c(blue, red, orange, purple, green))
   pal_age_vector <- pal_age(para$D)
@@ -41,7 +49,7 @@ plot_age_topics <- function(disease_names, trajs,  plot_title, start_age = 30, t
   col_ds <- pal_age_vector[dominant_ds_id]
   if(length(dominant_ds_id) == 1 ){
     plt <- ggplot(data = df_topics, aes(x = age)) +
-      geom_label_repel(data = legend, aes(x = x_pos, y = y_pos, label = ds_label,fontface = "bold"),color = col_ds ) + # , vjust = "inward", hjust = "inward") +
+      ggrepel::geom_label_repel(data = legend, aes(x = x_pos, y = y_pos, label = ds_label,fontface = "bold"),color = col_ds ) + # , vjust = "inward", hjust = "inward") +
       theme_bw(base_size = 20) +
       geom_line(aes(x = age, y = inferred_topics), color = col_ds[1], size = 1.5) +
       labs(x="Age", y="Multinomial probability", title=plot_title)
@@ -54,7 +62,7 @@ plot_age_topics <- function(disease_names, trajs,  plot_title, start_age = 30, t
         geom_line(aes_string(y = paste0("inferred_topics.",line_id) ), size = 1.5, color = col_ds[line_id])
     }
     plt <- plt +
-      geom_label_repel(data = legend, aes(x = x_pos, y = y_pos, label = ds_label,fontface = "bold", fontsize = 3),size = 5 ,color = col_ds)  # , vjust = "inward", hjust = "inward") +
+      ggrepel::geom_label_repel(data = legend, aes(x = x_pos, y = y_pos, label = ds_label,fontface = "bold", fontsize = 3),size = 5 ,color = col_ds)  # , vjust = "inward", hjust = "inward") +
 
   }
   return(plt)

@@ -1,3 +1,17 @@
+## code to import some common functions from dplyr and stats
+usethis::use_pipe(export = TRUE)
+usethis::use_import_from("dplyr", c("anti_join", "arrange", "group_by",
+                                    "bind_rows", "filter", "left_join",
+                                    "mutate", "n", "pull", "rename",
+                                    "select", "slice", "summarise", "ungroup",
+                                    "data_frame"))
+usethis::use_import_from("grDevices", "colorRampPalette")
+usethis::use_import_from("stats", c("binomial", "coef", "glm", "lm", "optim",
+           "p.adjust", "pnorm", "quantile", "rexp", "rgamma", "rnorm",
+           "runif", "sd"))
+usethis::use_import_from("utils", "object.size")
+
+
 ## code to prepare `UKB_HES_10topics` dataset goes here
 # the data is the one that has highest ELBO among random initializations
 K <- 10

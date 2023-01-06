@@ -1,14 +1,13 @@
-library(MendelianRandomization)
-library(parallel)
-library(dplyr)
-library(tidyverse)
-library(gtools)
-library(maxLik)
-library(Rcpp)
-library(glmnet)
-library(pROC)
-library(gtools)
-
+# library(MendelianRandomization)
+# library(parallel)
+# library(dplyr)
+# library(tidyverse)
+# library(gtools)
+# library(maxLik)
+# library(Rcpp)
+# library(glmnet)
+# library(pROC)
+# library(gtools)
 
 # source("R/ATM_inference.R")
 ####################################
@@ -33,7 +32,7 @@ simulate_basic_topic_data <- function(sample_sz, topic_number, disease_number, o
   # normalise beta
   para$beta <- apply(para$beta, 2, function(x) x/sum(x))
   para$true_beta <- para$beta
-  para$theta <- rdirichlet(para$M, para$alpha)
+  para$theta <- gtools::rdirichlet(para$M, para$alpha)
   para$zn <- list()
   para$w <-list()
   for(s in 1:para$M){
@@ -47,13 +46,13 @@ simulate_basic_topic_data <- function(sample_sz, topic_number, disease_number, o
   para$ds_list <- para$unlist_Ds_id %>%
     mutate(id = row_number()) %>%
     group_by(Ds_id) %>%
-    group_split()
+    dplyr::group_split()
 
   para$patient_lst <- para$unlist_Ds_id %>%
     mutate(id = row_number()) %>%
     select(eid, id) %>%
     group_by(eid) %>%
-    group_split(keep = F) %>%
+    dplyr::group_split(.keep = F) %>%
     lapply(pull)
 
   # this beta_w parameter save the beta for each word: it is a list of M elements and each contain a K*Ns matrix
@@ -77,7 +76,7 @@ simulate_basic_topic_data <- function(sample_sz, topic_number, disease_number, o
     select(eid, diag_icd10, age_diag) %>%
     group_by(eid, diag_icd10) %>%
     arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
-    slice(1) %>%
+    dplyr::slice(1) %>%
     ungroup()
 
   return(para)
@@ -116,7 +115,7 @@ simulate_age_topic_data <- function(sample_sz, topic_number,
   }
   para$true_beta <- para$beta # save beta for plotting
 
-  para$theta <- rdirichlet(para$M, para$alpha)
+  para$theta <- gtools::rdirichlet(para$M, para$alpha)
   para$zn <- list()
   para$w <-list()
   for(s in 1:para$M){
@@ -132,12 +131,12 @@ simulate_age_topic_data <- function(sample_sz, topic_number,
     select(-eid) %>%
     mutate(id = row_number()) %>%
     group_by(Ds_id) %>%
-    group_split()
+    dplyr::group_split()
   para$patient_lst <- para$unlist_Ds_id %>%
     mutate(id = row_number()) %>%
     select(eid, id) %>%
     group_by(eid) %>%
-    group_split(keep = F) %>%
+    dplyr::group_split(.keep = F) %>%
     lapply(pull)
 
   # basis is for a age grid
@@ -177,7 +176,7 @@ simulate_age_topic_data <- function(sample_sz, topic_number,
     select(eid, diag_icd10, age_diag) %>%
     group_by(eid, diag_icd10) %>%
     arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
-    slice(1) %>%
+    dplyr::slice(1) %>%
     ungroup()
 
   return(para)
@@ -245,7 +244,7 @@ simulate_topics <- function(topic_number, num_snp=100, pop_sz=10000, disease2top
 
   # simulate topic
   para$alpha <- rgamma(para$K, shape = 50, rate = 50)
-  para$theta <- rdirichlet(para$M, para$alpha)
+  para$theta <- gtools::rdirichlet(para$M, para$alpha)
   # causal disease
   para$theta[,1] <- para$theta[,1] + disease2topic * causal_disease - mean(disease2topic * causal_disease)
   # genetic effects
@@ -385,7 +384,7 @@ simulate_genetic_disease_from_topic <- function(para, genetics_population,causal
     select(eid, diag_icd10, age_diag) %>%
     group_by(eid, diag_icd10) %>%
     arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
-    slice(1) %>%
+    dplyr::slice(1) %>%
     ungroup()
 
   ds_list <- rec_data %>%
@@ -517,12 +516,12 @@ eggerMR <- function(loadings, disease, genetics, method = "ivw") {
   IV_disease <- which(p.adjust(d_pvalue,method = "fdr") < 0.05)
 
   if(length(IV_topic) > 0){
-    t2d_MRdata <- mr_input(bx = t_effects[IV_topic], bxse = t_se[IV_topic],
+    t2d_MRdata <- MendelianRandomization::mr_input(bx = t_effects[IV_topic], bxse = t_se[IV_topic],
                            by = d_effects[IV_topic], byse = d_se[IV_topic])
     if(method == "egger"){
-      topic2diseaseMR <- mr_egger(t2d_MRdata)
+      topic2diseaseMR <- MendelianRandomization::mr_egger(t2d_MRdata)
     }else if(method == "ivw"){
-      topic2diseaseMR <- mr_ivw(t2d_MRdata)
+      topic2diseaseMR <- MendelianRandomization::mr_ivw(t2d_MRdata)
     }
 
   }else{
@@ -530,12 +529,12 @@ eggerMR <- function(loadings, disease, genetics, method = "ivw") {
   }
 
   if(length(IV_disease) > 0){
-    d2t_MRdata <- mr_input(bx = d_effects[IV_disease], bxse = d_se[IV_disease],
+    d2t_MRdata <- MendelianRandomization::mr_input(bx = d_effects[IV_disease], bxse = d_se[IV_disease],
                            by = t_effects[IV_disease], byse = t_se[IV_disease])
     if(method == "egger"){
-      disease2topicMR <- mr_egger(d2t_MRdata)
+      disease2topicMR <- MendelianRandomization::mr_egger(d2t_MRdata)
     }else if(method == "ivw"){
-      disease2topicMR <- mr_ivw(d2t_MRdata)
+      disease2topicMR <- MendelianRandomization::mr_ivw(d2t_MRdata)
     }
 
   }else{

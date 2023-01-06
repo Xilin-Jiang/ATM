@@ -5,8 +5,8 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
     arrange(eid) %>%
     group_by(eid, diag_icd10) %>%
     arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
-    slice(1) %>%
-    ungroup()
+    dplyr::slice(1) %>%
+    dplyr::ungroup()
 
   # plot the number distribution of indiviudal diseases
   df_number_records <- first_incidence_age %>%
@@ -33,29 +33,29 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
 
   # the patient_list provide the column index for efficiently breaking down matrix into list of matrices
   para$patient_lst <- para$unlist_Ds_id %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     select(eid, id) %>%
     group_by(eid) %>%
-    group_split(keep = F) %>%
+    dplyr::group_split(.keep = F) %>%
     lapply(pull)
 
   para$w <- para$unlist_Ds_id %>%
     group_by(eid) %>%
-    group_split(keep = F)
+    dplyr::group_split(.keep = F)
 
   # this list is splitted by disease
   para$ds_list <- para$unlist_Ds_id %>%
     select(-eid) %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     group_by(Ds_id) %>%
-    group_split()
+    dplyr::group_split()
   print("ATM RAM occupation: ")
   print(object.size(para$w), unit = "MB" , standard = "SI")
 
   # initiate beta
   para$eta <- rgamma(para$D,shape = 100, rate = 100)
   # each column is a topic; D*K matrix
-  para$beta <- t(rdirichlet(para$K, para$eta))
+  para$beta <- t(gtools::rdirichlet(para$K, para$eta))
 
   # initiate alpha
   para$alpha <- rgamma(para$K, shape = 50, rate = 10)
@@ -82,9 +82,9 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
     arrange(eid) %>%
     group_by(eid, diag_icd10) %>%
     filter(n() == 1 | age_diag == min(age_diag) ) %>% # this row is highly optimized, a lot faster the slice_min ### don't change
-    slice(1) %>%
+    dplyr::slice(1) %>%
     # arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
-    ungroup()
+    dplyr::ungroup()
 
   # plot the number distribution of indiviudal diseases
   df_number_records <- first_incidence_age %>%
@@ -114,22 +114,22 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
     mutate(age_diag = round(age_diag))
   # the patient_list provide the column index for efficiently breaking down matrix into list of matrices
   para$patient_lst <- para$unlist_Ds_id %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     select(eid, id) %>%
     group_by(eid) %>%
-    group_split(keep = F) %>%
+    dplyr::group_split(.keep = F) %>%
     lapply(pull)
 
   para$w <- para$unlist_Ds_id %>%
     group_by(eid) %>%
-    group_split(keep = F)
+    dplyr::group_split(.keep = F)
 
   # this list is column ID for each disease
   para$ds_list <- para$unlist_Ds_id %>%
     select(-eid) %>%
-    mutate(id = row_number()) %>%
+    mutate(id = dplyr::row_number()) %>%
     group_by(Ds_id) %>%
-    group_split()
+    dplyr::group_split()
   print("ATM RAM occupation: ")
   print(object.size(para$w), unit = "MB" , standard = "SI")
 
@@ -647,10 +647,10 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
   for(cvb_rep in 1:CVB_num){
     cvrg_lb <-  ELBOs[[cvb_rep]] %>%
       filter(!is.na(Lower_bound)) %>%
-      slice_tail %>%
+      dplyr::slice_tail(1) %>%
       pull(2)
     lb_rep <- lb_rep %>%
-      add_row(reps = cvb_rep, lower_bound = cvrg_lb)
+      dplyr::add_row(reps = cvb_rep, lower_bound = cvrg_lb)
   }
   best_id <- order(lb_rep$lower_bound, decreasing = T)[1]
 
@@ -702,8 +702,8 @@ icd2phecode <- function(rec_data){
     left_join(non_one2one_map, by = "phecode") %>%
     group_by(ICD10) %>%
     arrange( desc(occ), .by_group = T, ) %>%
-    slice(1) %>%
-    ungroup() %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup() %>%
     rename(parent_phecode = phecode)
 
   new_data <- rec_data %>%
@@ -726,7 +726,7 @@ icd2phecode <- function(rec_data){
     group_by(eid, diag_icd10) %>%
     filter(n() == 1 | age_diag == min(age_diag) ) %>% # this row is highly optimized, a lot faster the slice_min ### don't change
     slice(1) %>%
-    ungroup()
+    dplyr::ungroup()
 
   return(new_data)
 }

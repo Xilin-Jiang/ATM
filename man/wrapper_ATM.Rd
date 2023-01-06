@@ -29,7 +29,7 @@ within each individual, the rest will be ignored.}
 }
 \value{
 Reture a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
-patient_list (list of eid which correspond to rows of topic_weights), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
+patient_list (list of eid which correspond to rows of topic_weights), ds_list (gives the ordering of diseases in the topic_loadings object), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
 topic_configuration (control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial,
 cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.), multiple_run_ELBO_compare (ELBO of each runs).
 }

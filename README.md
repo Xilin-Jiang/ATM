@@ -27,12 +27,25 @@ If the goal is obtain the  *topic weights* for a group of individuals to learn a
 ```r
 new_weights <- loading2weights(HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
 ```
-`UKB_HES_10topics` is the internal topics of the package. You could substitute it to other disease topics, with the same data format (a tensor of shape $age \times disease_number \times topic_number$). The output will be the topic weights of each individual, representing the comorbidity profile.  
+`UKB_HES_10topics` is the internal topics of the package. You could substitute it to other disease topics, with the same data format (a tensor of shape $age \times disease number \times topic number$). The output will be the topic weights of each individual, representing the comorbidity profile.
+
+To visualise the topic loadings, first get the names of the disease: 
+```r
+disease_list <- UKB_349_disease %>% 
+  left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) %>% 
+  pull(phenotype)
+
+```
+
 
 ## Internal data example
 We provide example simulated data along with the pacakage. `UKB_349_disease` is the list of 349 diseases (Phecode) that have more than 1000 incidences in the UK Biobank HES data. `HES_age_example` is an example data simulated using the comorbidity distribution in UK Biobank; for inferring disease topics using ATM, you should format the data as `HES_age_example`, which requires individual id, disease diagnosis, and age-at-diagnosis.  `UKB_HES_10topics` is the inferred optimal disease topic from UK Biobank HES data set, using the 349 diseases.
 
-We recommend using Phecode for ATM to reduce coding redundancy in coding system such as ICD-10. To map from ICD-10 code to Phecode, use function `icd2phecode`. `icd2phecode` make use of ICD-10 to phecode mapping which are saved as internal data in ATM package: `phecode_icd10cm` maps between ICD-10-CM to Phecode; `phecode_icd10` maps between ICD-10 to Phecode; `disease_info_phecode_icd10` saves the disease names of 1755 Phecodes, use `UKB_349_disease %>% left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" ))`.  
+We recommend using Phecode for ATM to reduce coding redundancy in coding system such as ICD-10. To map from ICD-10 code to Phecode, use function `icd2phecode`. `icd2phecode` make use of ICD-10 to phecode mapping which are saved as internal data in ATM package: `phecode_icd10cm` maps between ICD-10-CM to Phecode; `phecode_icd10` maps between ICD-10 to Phecode; `disease_info_phecode_icd10` saves the disease names of 1755 Phecodes, use `UKB_349_disease %>% left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" ))`.
+
+## Inferring disease topics using diagnosis data
+
+## Inferring comorbidity profiles for individuals. 
 
 ## Generative process of ATM
 ![My Image](ATM_generative_process.png)
@@ -61,8 +74,3 @@ where $p_{ij} = ( p_{ij,d} ), \; d = 1,2,...,P$ is the vector of parameter for t
 $$w_{sn} \sim Multi(\beta_{z_{sn}}(t_{sn})),$$
 here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis $w_{sn}$.
 
-## Estimate individual comorbidity weight using the comorbidity profiles inferred from UK Biobank.(XXXinsert code example here; use simulated data to show)
-
-## Inferring comorbidity profiles from individual diagnostic data set. 
-(XXX this is computational expensive, therefore not only provide R package, also complie an executable)
-infer_age_topics.R contains code for an example run. 
