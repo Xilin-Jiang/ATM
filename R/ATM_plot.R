@@ -31,9 +31,9 @@ skyblue <- cbPalette[3]
 #'         trajs = UKB_HES_10topics[30:80,,topic_id],
 #'         plot_title = paste0("topic ", topic_id),
 #'         top_ds = 7)
-plot_age_topics <- function(disease_names, trajs,  plot_title, start_age = 30, top_ds = 10){
+plot_age_topics <- function(disease_names, trajs,  plot_title = "", start_age = 30, top_ds = 10){
   pal_age <- colorRampPalette(c(blue, red, orange, purple, green))
-  pal_age_vector <- pal_age(para$D)
+  pal_age_vector <- pal_age(length(disease_names))
   # dominant_ds_id <- which(sapply(1:dim(trajs)[2], function(j) mean(trajs[,j], na.rm = T) > thre_pick))
   dominant_ds_id <- order(sapply(1:dim(trajs)[2], function(j) mean(trajs[,j], na.rm = T)), decreasing = T)[1:top_ds]
   # if nothing pass the threshold

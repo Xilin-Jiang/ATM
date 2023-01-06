@@ -21,6 +21,7 @@ Imports:
     magrittr,
     reshape2,
     stats,
+    stringr,
     tidyr,
     utils
 Suggests: 

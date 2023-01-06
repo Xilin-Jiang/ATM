@@ -13,7 +13,20 @@ test_that("each step of the inference", {
 })
 
 test_that("inference wrapper", {
-  inference_results <- wrapper_ATM(HES_age_example, topic_num = 3, CVB_num = 1)
+  HES_age_small_sample <- HES_age_example %>%
+    dplyr::slice_sample(prop = 0.1)
+  inference_results <- wrapper_ATM(HES_age_small_sample, topic_num = 10, CVB_num = 1)
+  expect_gt(inference_results$ELBO_convergence$Lower_bound[2], inference_results$ELBO_convergence$Lower_bound[1])
+  expect_gt(inference_results$ELBO_convergence$Lower_bound[5], inference_results$ELBO_convergence$Lower_bound[4])
+  disease_list <- inference_results$ds_list %>%
+    left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) %>%
+    pull(phenotype)
+  topic_id <- 5 # plot the first topic
+  plt <- plot_age_topics(disease_names = disease_list,
+                  trajs = inference_results$topic_loadings[35:75,,topic_id],
+                  plot_title = paste0("topic ", topic_id),
+                  top_ds = 7)
+  expect_equal(class(plt)[2], class(ggplot())[2])
 })
 
 test_that("estimate topic weights from fixed topic loadings", {

@@ -697,18 +697,9 @@ longdata2diseasematrix <- function(rec_data){
 #'
 #' @examples phecode_data <- icd2phecode(HES_icd10_example)
 icd2phecode <- function(rec_data){
-  short_icd10cm <- phecode_icd10cm %>%
-    mutate(ICD10 = substring(ICD10, 1,4)) %>%
-    left_join(non_one2one_map, by = "phecode") %>%
-    group_by(ICD10) %>%
-    arrange( desc(occ), .by_group = T, ) %>%
-    dplyr::slice(1) %>%
-    dplyr::ungroup() %>%
-    rename(parent_phecode = phecode)
-
   new_data <- rec_data %>%
     select(eid, diag_icd10, age_diag) %>%
-    filter(str_detect(diag_icd10, "^[A-N]")) %>%
+    filter(stringr::str_detect(diag_icd10, "^[A-N]")) %>%
     left_join(phecode_icd10cm, by = c("diag_icd10" = "ICD10")) %>%
     mutate(diag_icd10 = substring(diag_icd10, 1,4)) %>%
     left_join(phecode_icd10, by = c("diag_icd10" = "ICD10"))  %>%

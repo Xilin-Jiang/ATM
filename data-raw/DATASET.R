@@ -10,6 +10,8 @@ usethis::use_import_from("stats", c("binomial", "coef", "glm", "lm", "optim",
            "p.adjust", "pnorm", "quantile", "rexp", "rgamma", "rnorm",
            "runif", "sd"))
 usethis::use_import_from("utils", "object.size")
+usethis::use_import_from("ggplot2", c("aes", "theme_bw", "labs", "geom_line",
+                                      "aes_string", "ggplot"))
 
 
 ## code to prepare `UKB_HES_10topics` dataset goes here
@@ -72,6 +74,17 @@ phecode_icd10cm <- read.csv(paste0(DIR, "Phecode_map_v1_2_icd10cm_beta.csv")) %>
   mutate(ICD10 = sub("[.]","",icd10cm)) %>% # remove the dots
   select(ICD10, phecode,exclude_range, exclude_name)
 usethis::use_data(phecode_icd10cm, overwrite = TRUE)
+
+# only use the first 4 letters of the ICD10
+short_icd10cm <- phecode_icd10cm %>%
+  mutate(ICD10 = substring(ICD10, 1,4)) %>%
+  left_join(non_one2one_map, by = "phecode") %>%
+  group_by(ICD10) %>%
+  arrange( desc(occ), .by_group = T, ) %>%
+  dplyr::slice(1) %>%
+  dplyr::ungroup() %>%
+  rename(parent_phecode = phecode)
+usethis::use_data(short_icd10cm, overwrite = TRUE)
 
 phecode_icd10 <- read.csv(paste0(DIR,"phecode_icd10.csv")) %>%
   left_join(non_one2one_map, by = c("PheCode" = "phecode")) %>%

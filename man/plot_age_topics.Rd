@@ -4,7 +4,13 @@
 \alias{plot_age_topics}
 \title{Title plot the topic loadings across age.}
 \usage{
-plot_age_topics(disease_names, trajs, plot_title, start_age = 30, top_ds = 10)
+plot_age_topics(
+  disease_names,
+  trajs,
+  plot_title = "",
+  start_age = 30,
+  top_ds = 10
+)
 }
 \arguments{
 \item{disease_names}{the list of disease names, ordered as the topic.}
