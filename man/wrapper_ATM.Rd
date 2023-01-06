@@ -39,5 +39,7 @@ if the data set is small and the goal is to infer patient-level topic weights (i
 please use loading2weights.
 }
 \examples{
-ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
+  HES_age_small_sample <- HES_age_example \%>\%
+dplyr::slice_sample(prop = 0.1)
+inference_results <- wrapper_ATM(HES_age_small_sample, topic_num = 10, CVB_num = 1)
 }

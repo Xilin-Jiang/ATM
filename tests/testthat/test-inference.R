@@ -20,7 +20,7 @@ test_that("inference wrapper", {
   expect_gt(inference_results$ELBO_convergence$Lower_bound[5], inference_results$ELBO_convergence$Lower_bound[4])
   disease_list <- inference_results$ds_list %>%
     left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) %>%
-    pull(phenotype)
+    dplyr::pull(phenotype)
   topic_id <- 5 # plot the first topic
   plt <- plot_age_topics(disease_names = disease_list,
                   trajs = inference_results$topic_loadings[35:75,,topic_id],

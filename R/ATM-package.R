@@ -8,6 +8,7 @@
 #' @importFrom dplyr data_frame
 #' @importFrom dplyr filter
 #' @importFrom dplyr group_by
+#' @importFrom dplyr if_else
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
 #' @importFrom dplyr n

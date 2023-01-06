@@ -32,8 +32,8 @@ Title plot the topic loadings across age.
 }
 \examples{
 disease_list <- UKB_349_disease \%>\%
-left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) \%>\%
-pull(phenotype)
+dplyr::left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) \%>\%
+dplyr::pull(phenotype)
 topic_id <- 1 # plot the first topic
 plot_age_topics(disease_names = disease_list,
         trajs = UKB_HES_10topics[30:80,,topic_id],

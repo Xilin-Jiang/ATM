@@ -7,11 +7,11 @@ all genetic effect are on the first topic only
 5 types of G-disease-topic structure
 3 sets of SNPs.
 \enumerate{
-\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1
-\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1
-\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1
-\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1
-\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1
+\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1;
+\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1;
+\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1;
+\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1;
+\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1;
 }}
 \usage{
 simulate_topics(
@@ -54,20 +54,22 @@ all genetic effect are on the first topic only
 5 types of G-disease-topic structure
 3 sets of SNPs.
 \enumerate{
-\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1
-\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1
-\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1
-\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1
-\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1
+\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1;
+\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1;
+\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1;
+\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1;
+\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1;
 }
 }
 \examples{
+disease2topic <- 0
+cont_v2t <- 20
 rslts <- simulate_topics(topic_number = 2, disease2topic  = disease2topic, v2t = cont_v2t )
 para_sim <- rslts[[1]]
 genetics_population <- rslts[[2]]
 causal_disease <- rslts[[3]]
 reslt_ds <- simulate_genetic_disease_from_topic(para_sim, genetics_population,causal_disease,
-disease_number = disease_number, itr_effect = itr_effect,
-topic2disease = topic2disease, v2t = cont_v2t)
+disease_number = 20, itr_effect = 1,
+topic2disease = 2, v2t = 20)
 rec_data <- reslt_ds[[1]]
 }

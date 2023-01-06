@@ -597,7 +597,9 @@ update_alpha <- function(para){
 #' cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.), multiple_run_ELBO_compare (ELBO of each runs).
 #' @export
 #'
-#' @examples ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
+#' @examples   HES_age_small_sample <- HES_age_example %>%
+#' dplyr::slice_sample(prop = 0.1)
+#' inference_results <- wrapper_ATM(HES_age_small_sample, topic_num = 10, CVB_num = 1)
 wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, save_data = F){
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%

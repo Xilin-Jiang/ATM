@@ -198,11 +198,11 @@ generate_genetics <- function(maf, n){
 #' all genetic effect are on the first topic only
 #' 5 types of G-disease-topic structure
 #' 3 sets of SNPs.
-#' 1. SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1
-#' 2. SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1
-#' 3. SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1
-#' 4. SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1
-#' 5. SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1
+#' 1. SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1;
+#' 2. SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1;
+#' 3. SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1;
+#' 4. SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1;
+#' 5. SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1;
 #'
 #' @param topic_number Number of topics to simulate.
 #' @param num_snp Number of SNPs in the simulation, default is 100; no less than 60.
@@ -219,13 +219,16 @@ generate_genetics <- function(maf, n){
 #' third is one simulated disease (binary) which is causal to the topic loading of the first topic.
 #' @export
 #'
-#' @examples rslts <- simulate_topics(topic_number = 2, disease2topic  = disease2topic, v2t = cont_v2t )
+#' @examples
+#' disease2topic <- 0
+#' cont_v2t <- 20
+#' rslts <- simulate_topics(topic_number = 2, disease2topic  = disease2topic, v2t = cont_v2t )
 #' para_sim <- rslts[[1]]
 #' genetics_population <- rslts[[2]]
 #' causal_disease <- rslts[[3]]
 #' reslt_ds <- simulate_genetic_disease_from_topic(para_sim, genetics_population,causal_disease,
-#' disease_number = disease_number, itr_effect = itr_effect,
-#' topic2disease = topic2disease, v2t = cont_v2t)
+#' disease_number = 20, itr_effect = 1,
+#' topic2disease = 2, v2t = 20)
 #' rec_data <- reslt_ds[[1]]
 
 simulate_topics <- function(topic_number, num_snp=100, pop_sz=10000, disease2topic = 0, v2t = 20, snp2t = 0.04, snp2d = 0.15, liability_thre = 0.8){
