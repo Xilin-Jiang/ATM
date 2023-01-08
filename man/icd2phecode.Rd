@@ -2,7 +2,7 @@
 % Please edit documentation in R/ATM_inference.R
 \name{icd2phecode}
 \alias{icd2phecode}
-\title{Title Mapping the disease code from icd10 to phecode}
+\title{Mapping the disease code from icd10 to phecode}
 \usage{
 icd2phecode(rec_data)
 }

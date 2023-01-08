@@ -2,7 +2,7 @@
 % Please edit documentation in R/ATM_inference.R
 \name{wrapper_ATM}
 \alias{wrapper_ATM}
-\title{Title Run ATM on diagnosis data.}
+\title{Run ATM on diagnosis data.}
 \usage{
 wrapper_ATM(
   rec_data,
