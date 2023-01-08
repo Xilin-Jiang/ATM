@@ -579,6 +579,8 @@ update_alpha <- function(para){
 }
 
 
+#' Run ATM on diagnosis data.
+#'
 #' Run ATM on diagnosis data to infer topic loadings and topic weights. Note one run of ATM on 100K individuals would take ~30min (defualt is 5 runs and pick the best fit);
 #' if the data set is small and the goal is to infer patient-level topic weights (i.e. assign comorbidity profiles to individuals based on the disedases),
 #' please use loading2weights.
@@ -690,7 +692,10 @@ longdata2diseasematrix <- function(rec_data){
 }
 
 # function to map icd10 to phecode
-#' Title mapping the disease code from icd10 to phecode; the mapping are based on https://phewascatalog.org/phecodes
+#' Mapping the disease code from icd10 to phecode
+#'
+#' Mapping the disease code from icd10 to phecode; the mapping are based on https://phewascatalog.org/phecodes;
+#' The input if using ICD-10 should be a string  f numbers and capital letters only. For example, "I25.1" should be "I251".
 #'
 #' @param rec_data input data which use ICD10 encoding; please refer to the internal example data `HES_icd10_example` for the formatting of the data.
 #'

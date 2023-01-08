@@ -2,9 +2,7 @@
 % Please edit documentation in R/ATM_inference.R
 \name{wrapper_ATM}
 \alias{wrapper_ATM}
-\title{Run ATM on diagnosis data to infer topic loadings and topic weights. Note one run of ATM on 100K individuals would take ~30min (defualt is 5 runs and pick the best fit);
-if the data set is small and the goal is to infer patient-level topic weights (i.e. assign comorbidity profiles to individuals based on the disedases),
-please use loading2weights.}
+\title{Title Run ATM on diagnosis data.}
 \usage{
 wrapper_ATM(
   rec_data,

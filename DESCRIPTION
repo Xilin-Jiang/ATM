@@ -19,9 +19,12 @@ Imports:
     grDevices,
     gtools,
     magrittr,
+    MendelianRandomization,
+    pROC,
     reshape2,
     stats,
     stringr,
+    tibble,
     tidyr,
     utils
 Suggests: 

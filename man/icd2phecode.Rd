@@ -2,7 +2,7 @@
 % Please edit documentation in R/ATM_inference.R
 \name{icd2phecode}
 \alias{icd2phecode}
-\title{Title mapping the disease code from icd10 to phecode; the mapping are based on https://phewascatalog.org/phecodes}
+\title{Title Mapping the disease code from icd10 to phecode}
 \usage{
 icd2phecode(rec_data)
 }
@@ -13,7 +13,8 @@ icd2phecode(rec_data)
 a data frame where most entries are mapped from ICD10 code to phecode
 }
 \description{
-Title mapping the disease code from icd10 to phecode; the mapping are based on https://phewascatalog.org/phecodes
+Mapping the disease code from icd10 to phecode; the mapping are based on https://phewascatalog.org/phecodes;
+The input if using ICD-10 should be a string  f numbers and capital letters only. For example, "I25.1" should be "I251".
 }
 \examples{
 phecode_data <- icd2phecode(HES_icd10_example)

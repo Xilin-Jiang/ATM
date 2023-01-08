@@ -1,8 +1,10 @@
-## ATM (document in progress)
+## ATM
 Age-dependent topic modelling (ATM) is a method for inferring comorbidity profiles for individuals at Biobank Scale. Details of the Method is available in the paper [Age-dependent topic modelling of comorbidities in UK Biobank identifies disease subtypes with differential genetic risk](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2).
 
 ATM assigns to each individual topic weights for several disease topics; each disease topic reflects a set of diseases that tend to co-occur as a function of age, quantified by age-dependent *topic loadings* for each disease. The model assumes that for each disease diagnosis, a topic is sampled based on the individual’s *topic weights* (which sum to 1 across topics, for a given individual), and a disease is sampled based on the individual’s age and the age-dependent *topic loadings* (which sum to 1 across diseases, for a given topic at a given age). The model generalises the latent dirichlet allocation (LDA) model by allowing topic loadings for each topic to vary with age. 
 ![My Image](ATM_schematic.png)
+
+For bug reports, please email: <xilinjiang@hsph.harvard.edu>. 
 
 ## Installation
 
@@ -43,9 +45,31 @@ We provide example simulated data along with the pacakage. `UKB_349_disease` is 
 
 We recommend using Phecode for ATM to reduce coding redundancy in coding system such as ICD-10. To map from ICD-10 code to Phecode, use function `icd2phecode`. `icd2phecode` make use of ICD-10 to phecode mapping which are saved as internal data in ATM package: `phecode_icd10cm` maps between ICD-10-CM to Phecode; `phecode_icd10` maps between ICD-10 to Phecode; `disease_info_phecode_icd10` saves the disease names of 1755 Phecodes, use `UKB_349_disease %>% left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" ))`.
 
+## Data preparation
+ATM inference is based on age-at-diagnosis information of many diseases. We use the long format to encode a sparse matrix encoding where only age information for diagnosed diseases are provided (oppose to data matrix where each row is an individual and each column is a disease), which save spaces as only a small proportion of diseases are diagnosed for each individual. `HES_age_example` is the data example, where each entry contains one diagnosis entry, with individual, disease, and age information. 
+
+The default disease encoding of many biobanks are ICD-10; ATM support any coding system but we recommend using Phecode system which groups ICD-10 codes that represent the same disease. To map data from ICD-10 codes to Phecode, use `icd2phecode` function:  
+```r
+phecode_data <- icd2phecode(HES_icd10_example)
+```
+`icd2phecode` maps ICD-10 or ICD-10-CM codes to the Phecodes; when there are multiple Phecodes for one ICD-10/ICD-10-CM, it will map to the Phecode that are collects the largest number of ICD-10 codes (this aims to reduce the number of Phecodes in the data, which is always good for comorbidity analysis). You should remove all marks such as period and only keeps number and capital letters of the ICD-10 codes for the input data. For example, "I25.1" should be changed to "I251".  
+
 ## Inferring disease topics using diagnosis data
+If you have an EHR data with age-at-diagnosis information across many diseases, you could use ATM to infer topic loadings and topic weights. Inferring ATM topic loadings is computational expensive, and the inferred topic loadings usually reprents the pattern for the specific data set and should not be extended to other population, unless they were inferred from large comprehensive biobank.If the data set is small and the goal is to infer patient-level topic weights (i.e. assign comorbidity profiles to individuals based on the disedases), please use `loading2weights` in the next section. The input data should be format data as HES_age_example; first column is individual ids, second column is the disease code; third column is the age at diagnosis. 
+
+One reason that ATM inference is computational expensive is that you need to run multiple models to choose the best number of disease topics in the dataset. ATM does not automatically choose the best number of topics as each model (of different topic numbers) should be run in parallel and you should compare the [ELBO](https://en.wikipedia.org/wiki/Evidence_lower_bound) to choose the best fit. In the following example, `topic_num` is the number of topics ($K$ in [math details](## Generative process of ATM) section), which in a common EHR data you should choose between 5 to 15; `CVB_num` is the number of runs, where multiple ATM inferences will be performed and the best run will be returned, you are recommend to choose larger number for this if computational power permitting (default is 10);  `ATM_results$multiple_run_ELBO_compare` in the following section provides the ELBOs  of all the runs (i.e. for `CVB_num=10` you will get 10 ELBOs), the run with highest ELBOs is kept. Use `?wrapper_ATM` to get the details of the function. 
+
+```r
+# head(HES_age_example)
+ATM_results <- wrapper_ATM(rec_data=HES_age_example, topic_num = 10, CVB_num = 1)
+print(ATM_results$multiple_run_ELBO_compare)
+```
 
 ## Inferring comorbidity profiles for individuals. 
+In many scenarios, we are not interested in inferring a new set of topic , but we want to use the information of comorbidity at individual level. ATM provides *topic weights* which encode comorbidity profile. To be more spefic, using disease topics from [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2), if the topic weights for CVD topic is high, it means the individual has elevate comorbidity related to cardiovascular diseases. `loading2weights` function provides an easy handle for this purpose, where the input `rec_data` has the same format as in [previous section](## Inferring disease topics using diagnosis data) and the default comorbidity topics are 10 topics inferred from UK Biobank common diseases `UKB_HES_10topics`.  Following code maps diagnosis history (contained in the example data `HES_age_example`) to the default disease topics inferred from UK Biobank HES data. 
+```r
+new_weights <- loading2weights(rec_data=HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
+```
 
 ## Generative process of ATM
 ![My Image](ATM_generative_process.png)
