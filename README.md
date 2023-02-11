@@ -73,6 +73,8 @@ ATM_results <- wrapper_ATM(rec_data=HES_age_example, topic_num = 10, CVB_num = 1
 print(ATM_results$multiple_run_ELBO_compare)
 ```
 
+To choose the optimal model structure that fits the data, running `wrapper_ATM` for each model structure (number of topics and parametric form of curves) and comparing the  `multiple_run_ELBO_compare` for each model structure. The optimal model should has the highest average ELBO across runs. 
+
 ## Inferring comorbidity profiles for individuals.
 
 In many scenarios, we are not interested in inferring a new set of topic , but we want to use the information of comorbidity at individual level. ATM provides *topic weights* which encode comorbidity profile. To be more spefic, using disease topics from [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2), if the topic weights for CVD topic is high, it means the individual has elevate comorbidity related to cardiovascular diseases. `loading2weights` function provides an easy handle for this purpose, where the input `rec_data` has the same format as in [previous section](#inferring-disease-topics-using-diagnosis-data) and the default comorbidity topics are 10 topics inferred from UK Biobank common diseases `UKB_HES_10topics`.  Following code maps diagnosis history (contained in the example data `HES_age_example`) to the default disease topics inferred from UK Biobank HES data. 
