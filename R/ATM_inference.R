@@ -224,8 +224,10 @@ loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10
     })
   }
   new_weights <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
-  new_weights <- data.frame(eid = para$eid, topic_weights = new_weights, indidence_weight_sum = (para$alpha_z - 1))
-  return(new_weights)
+  weights_results <- list()
+  weights_results$topic_weights <- data.frame(eid = para$eid, topic_weights = new_weights)
+  weights_results$indidence_weight_sum <- data.frame(eid = para$eid, indidence_weight_sum = (para$alpha_z - 1))
+  return(weights_results)
 }
 
 ##########################################################################
