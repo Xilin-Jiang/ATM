@@ -191,8 +191,8 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 #' which are the inferred topics from 349 Phecodes from the UK Biobank HES data.
 #' Details of these topics are available in the paper "Age-dependent topic modelling of
 #' comorbidities in UK Biobank identifies disease subtypes with differential genetic risk".
-#' @return a data frame with the first column being the individual id, the second column is the patient topic weights mapped to the topic loadings;
-#' The third column is the cumulative topic weights across all disease diagnoses.
+#' @return a list with two dataframes: the topic_weights dataframe has the first column being the individual id, the other columns are the patient topic weights mapped to the topic loadings;
+#' The second dataframe column indidence_weight_sum is eid and the cumulative topic weights across all disease diagnoses.
 #' @export
 #'
 #' @examples new_weights <- loading2weights(HES_age_example)

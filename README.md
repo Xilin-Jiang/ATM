@@ -83,6 +83,24 @@ In many scenarios, we are not interested in inferring a new set of topic , but w
 new_weights <- loading2weights(rec_data=HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
 ```
 
+## Visualise the comorbidity loadings.
+To visualise the disease topics inferred from the data set, use the `plot_age_topics` functions. To use this function, you need th specify `disease_names`, disease topics `trajs`, title of the plot `plot_title`, and an optional age starts point to adjust the x-axis labels in case the supplied topic loadings does not start from age 0. You could also specify how many disease you want to show using `top_ds`.
+
+`disease_names` and `trajs` could be extracted from the output variable from `ATM_wrapper`. `disease_names` is the name of diseases ordered as `ATM_results$ds_list$diag_icd10`, assuming `ATM_results` is output of `ATM_wrapper`. While you could directly use the disease code, we recommend you use meaning disease discription as it will directly shows on the output figure. Similarly, `trajs` could be obtained by subsetting one matrix from `ATM_results$topic_loading`. For example `ATM_results$topic_loading[,,3]` is the third topics of the inference result.    
+
+If not clear about the inputs above, please test and check code below, which provides an example of disease topic visualisation. 
+```r
+disease_list <- UKB_349_disease %>%
+  dplyr::left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" )) %>%
+  dplyr::pull(phenotype)
+topic_id <- 1 # plot the first topic
+plot_age_topics(disease_names = disease_list,
+        trajs = UKB_HES_10topics[30:80,,topic_id],
+        plot_title = paste0("topic ", topic_id),
+        top_ds = 7)
+```
+
+
 ## Generative process of ATM
 
 ![My Image](ATM_generative_process.png)
