@@ -67,18 +67,18 @@ prediction_onebyone <- function(testing_data, ds_list, para_training, max_predic
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
         dplyr::slice(predict_num:n()) %>%
-        dplyr::ungroup
+        dplyr::ungroup()
     }else{
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
         dplyr::slice(predict_num) %>%
-        dplyr::ungroup
+        dplyr::ungroup()
     }
 
     estimating_test_set <- testing_data_included %>%
       group_by(eid) %>%
       dplyr::slice(1:(predict_num-1)) %>%
-      dplyr::ungroup
+      dplyr::ungroup()
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para$beta, each = 81),dim =  c(81, para$D, para$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
@@ -175,18 +175,18 @@ prediction_OR_onebyone <- function(testing_data, ds_list, para_training, max_pre
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
         dplyr::slice(predict_num:n()) %>%
-        dplyr::ungroup
+        dplyr::ungroup()
     }else{
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
         dplyr::slice(predict_num) %>%
-        dplyr::ungroup
+        dplyr::ungroup()
     }
 
     estimating_test_set <- testing_data_included %>%
       group_by(eid) %>%
       dplyr::slice(1:(predict_num-1)) %>%
-      dplyr::ungroup
+      dplyr::ungroup()
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para_training$beta, each = 81),dim =  c(81, para_training$D, para_training$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
@@ -285,18 +285,18 @@ save_prediction_logics <- function(testing_data, ds_list, para_training, max_pre
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
         dplyr::slice(predict_num:n()) %>%
-        dplyr::ungroup
+        dplyr::ungroup()
     }else{
       predicting_test_set <- testing_data_included %>%
         group_by(eid) %>%
         dplyr::slice(predict_num) %>%
-        dplyr::ungroup
+        dplyr::ungroup()
     }
 
     estimating_test_set <- testing_data_included %>%
       group_by(eid) %>%
       dplyr::slice(1:(predict_num-1)) %>%
-      dplyr::ungroup
+      dplyr::ungroup()
     if(is.null(para_training$P)){ # using P to determine if age is included
       para_training$pi_beta_basis <- array( rep(para$beta, each = 81),dim =  c(81, para$D, para$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
@@ -388,8 +388,8 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
       left_join(survive_age, by = "eid") %>%
       mutate(age_diag = round(age_diag), survive_year = round(survive_year))
     # we are underestimate the score for the cases, as some of them died of the disease
-    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 1) %>% dplyr::ungroup %>% summarise(mean(age_gap))
-    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 0) %>% dplyr::ungroup %>% summarise(mean(age_gap))
+    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 1) %>% dplyr::ungroup() %>% summarise(mean(age_gap))
+    outcomes %>% mutate(age_gap = survive_year - age_diag) %>% filter(outcome == 0) %>% dplyr::ungroup() %>% summarise(mean(age_gap))
     # below is how we estimate the area under curve as well as the
     estimating_test_set <- bind_rows(cases_data, control_data) %>%
       select(- target_age) %>%
@@ -613,3 +613,124 @@ LASSO_predict <- function(rec_data, para){
   }
   return(list(AUC_per_ds, coefficients))
 }
+
+# using function below to perform onebyone prediction
+prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 10){
+  # first order the incidences by age
+  testing_data <- testing_data %>%
+    group_by(eid) %>%
+    arrange(age_diag, .by_group = TRUE)
+
+  collect_risk_set <- list() # save all risk profiles
+  collect_ds_set <- c() # save all incidence index
+  collect_loadings <- list()
+
+  # use this for saving the final results
+  OR_each_disease <- list()
+  loadings_each_disease <- list()
+
+  for(predict_num in 2:max_predict){
+    testing_eid_included <- testing_data %>% # set incidence number threshold for inclusion in testing set
+      group_by(eid) %>%
+      summarise(n()) %>%
+      filter(`n()` >= predict_num) %>%
+      select(eid)
+
+    testing_data_included <- testing_eid_included %>%
+      left_join(testing_data, by = "eid")
+
+    # for the last iteration, just predict all left
+    if(predict_num == max_predict){
+      predicting_test_set <- testing_data_included %>%
+        group_by(eid) %>%
+        dplyr::slice(predict_num:n()) %>%
+        dplyr::ungroup()
+    }else{
+      predicting_test_set <- testing_data_included %>%
+        group_by(eid) %>%
+        dplyr::slice(predict_num) %>%
+        dplyr::ungroup()
+    }
+
+    estimating_test_set <- testing_data_included %>%
+      group_by(eid) %>%
+      dplyr::slice(1:(predict_num-1)) %>%
+      dplyr::ungroup()
+    if(is.null(para_training$P)){ # using P to determine if age is included
+      para_training$pi_beta_basis <- array( rep(para_training$beta, each = 81),dim =  c(81, para_training$D, para_training$K) )
+      # for both treeLDA and baseline lda, we only need to initialise baseline case here
+      para_testing <- topic_init_baseline(estimating_test_set, ds_list, para_training$K)
+    }else{
+      para_testing <- topic_init_age(estimating_test_set, ds_list, dim(ATM::UKB_HES_10topics)[3], degree_free_num = 5) # 5 here shouldn't matter
+    }
+    # assigning beta to the testing set
+    para_testing$beta_w_full <- apply(para_training$pi_beta_basis, 3, function(x)
+      x[as.matrix(select(para_testing$unlist_Ds_id, age_diag, Ds_id))])
+    para_testing$beta_w <- lapply(para_testing$patient_lst, function(x) para_testing$beta_w_full[x,,drop=F])
+
+    # updating Z_n
+    para_testing$max_itr <- 10
+    para_testing$alpha <- para_training$alpha
+    para_testing$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para_testing))
+    para_testing$tol <- 10^(-6)
+    for(itr in 1:para_testing$max_itr){
+      print(paste0("Interation: ",itr))
+      para_testing <- CVB0_E_zn(para_testing) # we choose CVB0 as papers shown it could converge quicker
+      para_testing$lb[nrow(para_testing$lb) + 1,] <- c(itr, CVB_lb(para_testing))
+      curr_lb <- pull(filter(para_testing$lb, Iteration == itr), Lower_bound)
+      prev_lb <- pull(filter(para_testing$lb, Iteration == (itr - 1 )), Lower_bound)
+      print(paste0("Current Lower bound ", curr_lb, " at iteration: ",itr))
+      try({
+        if(is.finite((curr_lb - prev_lb)) & abs(curr_lb - prev_lb)/abs(prev_lb) < para_testing$tol ){
+          print(paste0("Optimization converged at step ", itr))
+          break
+        }
+      })
+    }
+    ######################################
+    # we don't actually need the function below -- it is pretty simple once you get all the topic weights
+    ######################################
+    ######################################
+    ######################################
+    rslt_OR <- risk_each_disease(para_testing$w, predicting_test_set, para_testing$alpha_z, para_testing$eid, para_training$pi_beta_basis, para_training$list_above500occu$diag_icd10)
+
+    collect_risk_set[[predict_num]]  <- rslt_OR[[1]]
+    collect_ds_set[[predict_num]]  <- rslt_OR[[2]]
+    collect_loadings[[predict_num]]  <- rslt_OR[[3]]
+
+    # save results for each records
+    risk <- t(rslt_OR[[1]])
+    ds <- rslt_OR[[2]]
+    tp_ld <- rslt_OR[[3]] # save loadings
+
+    OR_rslt <- sapply(1:dim(risk)[2], function(j)
+      mean(risk[which(ds == j),j])/mean(risk[-which(ds == j),j]))
+    OR_rslt[is.na(OR_rslt)] <- 1
+    OR_each_disease[[predict_num]] <- OR_rslt
+    loadings_rslt <- sapply(1:dim(risk)[2], function(j)
+      colMeans(tp_ld[which(ds == j), , drop = F]))
+    loadings_rslt[is.na(loadings_rslt)] <- 1
+    loadings_each_disease[[predict_num]] <- t(loadings_rslt)
+  }
+  risk_set <- do.call(cbind, collect_risk_set) %>% t
+  ds_set <- unlist(collect_ds_set)
+  loading_set  <- do.call(rbind, collect_loadings)
+
+  OR_each_disease[[1]] <- sapply(1:dim(risk_set)[2], function(j)
+    mean(risk_set[which(ds_set == j),j])/mean(risk_set[-which(ds_set == j),j]))
+
+  loadings_each_disease[[1]] <- sapply(1:dim(risk_set)[2], function(j)
+    colMeans(loading_set[which(ds_set == j), , drop = F])) %>% t
+
+  # compute the logistic regression for each diseases: predictors are log risk ratio (sd = 1)
+  logRR <- sapply(1:dim(risk_set)[2], function(x) log(risk_set[,x]/mean(risk_set[,x]))  )
+  logRR <- sapply(1:dim(risk_set)[2], function(x) logRR[,x]/sd(logRR[,x]) )
+  # use logistic regression to save the OR per sd logRR and p-value
+  logstic_results <- sapply(1:dim(risk_set)[2], function(x)
+    summary(glm((ds_set == x) ~ logRR[,x], family = binomial))$coefficients[2,] ) %>% t
+
+  return(list(OR_each_disease, loadings_each_disease, para_training$pi_beta_basis, logstic_results))
+}
+
+
+

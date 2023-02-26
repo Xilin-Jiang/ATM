@@ -79,8 +79,12 @@ To choose the optimal model structure that fits the data, running `wrapper_ATM` 
 
 In many scenarios, we are not interested in inferring a new set of topic , but we want to use the information of comorbidity at individual level. ATM provides *topic weights* which encode comorbidity profile. To be more spefic, using disease topics from [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2), if the topic weights for CVD topic is high, it means the individual has elevate comorbidity related to cardiovascular diseases. `loading2weights` function provides an easy handle for this purpose, where the input `rec_data` has the same format as in [previous section](#inferring-disease-topics-using-diagnosis-data) and the default comorbidity topics are 10 topics inferred from UK Biobank common diseases `UKB_HES_10topics`.  Following code maps diagnosis history (contained in the example data `HES_age_example`) to the default disease topics inferred from UK Biobank HES data. 
 
+The outputs of `loading2weights` has two elements: `topic_weights` are patient level topic weights, referred to as *topic weights* in the  [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2); this should be used when the aim to understand individual comorbidity profiles. `incidence_weight_sum` is the sum of *diagnosis-specific topic weights* $z_{sn}$ in the ATM paper; this is a more useful metric for prediction, as it represent the cumulative comorbidity burden of each individual. 
+
 ```r
 new_weights <- loading2weights(rec_data=HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
+patient_topic_weights <- new_weights$topic_weights
+cummulative_disease_weights <- new_weights$incidence_weight_sum
 ```
 
 ## Visualise the comorbidity loadings.

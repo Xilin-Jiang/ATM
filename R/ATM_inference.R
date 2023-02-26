@@ -192,7 +192,7 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 #' Details of these topics are available in the paper "Age-dependent topic modelling of
 #' comorbidities in UK Biobank identifies disease subtypes with differential genetic risk".
 #' @return a list with two dataframes: the topic_weights dataframe has the first column being the individual id, the other columns are the patient topic weights mapped to the topic loadings;
-#' The second dataframe column indidence_weight_sum is eid and the cumulative topic weights across all disease diagnoses.
+#' The second dataframe column incidence_weight_sum is eid and the cumulative topic weights across all disease diagnoses.
 #' @export
 #'
 #' @examples new_weights <- loading2weights(HES_age_example)
@@ -226,7 +226,7 @@ loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10
   new_weights <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
   weights_results <- list()
   weights_results$topic_weights <- data.frame(eid = para$eid, topic_weights = new_weights)
-  weights_results$indidence_weight_sum <- data.frame(eid = para$eid, indidence_weight_sum = (para$alpha_z - 1))
+  weights_results$incidence_weight_sum <- data.frame(eid = para$eid, incidence_weight_sum = (para$alpha_z - 1))
   return(weights_results)
 }
 

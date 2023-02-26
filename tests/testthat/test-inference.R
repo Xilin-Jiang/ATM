@@ -30,7 +30,8 @@ test_that("inference wrapper", {
 })
 
 test_that("estimate topic weights from fixed topic loadings", {
-  new_weights <- loading2weights(HES_age_example)
+  topic_weights_results <- loading2weights(HES_age_example)
+  new_weights <- topic_weights_results$topic_weights
   load("~/Desktop/comorbidity/Results/Run_2rec_PheCode_age_dependent_K10_P5_rep10.RData")
   patient_weights <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
   originial_weights <- data.frame(eid = para$eid, loading = patient_weights)
