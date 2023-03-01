@@ -121,3 +121,51 @@ HES_icd10_example <- rec_data %>%
 usethis::use_data(HES_icd10_example, overwrite = TRUE)
 
 
+# get the count of cases in the UKBB
+hes_diag <- read.table(file = '~/Desktop/PROJECTS/genetics_longitudinal_data/longitudinal_data/hesin_diag10_130418.tsv',quote = '', sep = '\t', header = TRUE, fill=TRUE) %>%
+  mutate(record_id = as.factor(record_id))
+hes <- read.table(file = '~/Desktop/PROJECTS/genetics_longitudinal_data/longitudinal_data/hesin_130418.tsv',quote = '', sep = '\t', header = TRUE, fill=TRUE)
+
+# need to include all data from hes & hes_diag
+new_data <- hes_diag %>%
+  left_join(select(hes, record_id, epistart), by = "record_id") %>%
+  select(eid, record_id, diag_icd10, epistart) %>%
+  rbind(select(hes, eid, record_id, diag_icd10, epistart), by="record_id")
+
+ordering_hes_UKBB <- new_data %>%
+  group_by(diag_icd10) %>%
+  summarise(occ = n())
+
+# save SNOMED to ICD-10cm mapping
+options(scipen=999)
+SNOMED_ICD10CM <- read.csv("~/Desktop/admin/data_access/Code_mapping/SNOMED_CT_to_ICD-10-CM_Resources_20220901/SNOMED_to_ICD10cm_20220901.csv") %>%
+  mutate(referencedComponentId = as.character(referencedComponentId))
+
+SNOMED_ICD10CM <- SNOMED_ICD10CM %>%
+  select(referencedComponentId, referencedComponentName, mapTarget, mapTargetName) %>%
+  rename(SNOMED = referencedComponentId, SNOMED_description = referencedComponentName,
+         ICD10 = mapTarget, ICD10_name = mapTargetName) %>%
+  mutate(ICD10 = sub("[.]","",ICD10)) %>%
+  mutate(ICD10 = sub("[X]","",ICD10)) %>%
+  mutate(ICD10 = sub("[?]","",ICD10)) %>%
+  filter(ICD10 != "", ICD10 %in% ATM::phecode_icd10cm$ICD10) %>%
+  left_join(ordering_hes_UKBB, by = c("ICD10" = "diag_icd10")) %>%
+  group_by(SNOMED) %>%
+  arrange(desc(occ), .by_group = T) %>% # select the ICD10 codes that are most popular in UKBB
+  slice(1) %>%
+  ungroup()
+usethis::use_data(SNOMED_ICD10CM, overwrite = TRUE)
+
+##########################################################################################
+############### just make a SNOMED2phecode function!!!!
+##########################################################################################
+SNOMED_examples <- read.table("~/Desktop/admin/data_access/Code_mapping/snomed_code_description_df.txt",
+                              sep = '\t', header = F, quote = "")
+rec_data <- data.frame(eid = 1:dim(SNOMED_examples)[1], diag_icd10 = SNOMED_examples$V2, age_diag = 1:dim(SNOMED_examples)[1])
+
+SNOMED_examples %>%
+  filter(V2 %in% SNOMED_ICD10CM$SNOMED) %>%
+  dim
+# pick the ICD10 with most UKBB appearance to map SNOMED to
+
+

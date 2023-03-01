@@ -79,6 +79,7 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
 topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
   # arrange the data stack by individual is very important as we need to make sure the matrix could be rejoined into a single matrix
   first_incidence_age <- rec_data %>%
+    mutate(diag_icd10 = as.character(diag_icd10)) %>% # seem to fix the bug
     arrange(eid) %>%
     group_by(eid, diag_icd10) %>%
     filter(n() == 1 | age_diag == min(age_diag) ) %>% # this row is highly optimized, a lot faster the slice_min ### don't change
@@ -162,7 +163,7 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
   # this is the basis of softmax function
   para$pi_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), function(x) x/sum(x)) %>%
     aperm(perm = c(2,1,3))
-  # this beta_w parameter save the beta for each word: it is a list of M elements and each contain a K*Ns matri
+  # this beta_w parameter save the beta for each word: it is a list of M elements and each contain a K*Ns matrix
   para$beta_w_full <- apply(para$pi_beta_basis, 3, function(x)
     x[as.matrix(select(para$unlist_Ds_id, age_diag, Ds_id))])
   para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
@@ -716,7 +717,7 @@ icd2phecode <- function(rec_data){
     left_join(short_icd10cm, by = c("diag_icd10" = "ICD10"))
 
   not_mapped <- new_data %>% filter(is.na(phecode), is.na(PheCode), is.na(parent_phecode)) %>% dim
-  print(paste0((1-not_mapped[1]/dim(new_data)[1])*100 ,"% of the records are mapped"))
+  print(paste0((1-not_mapped[1]/dim(new_data)[1])*100 ,"% of the icd10 disease records are mapped to Phecodes"))
 
   new_data <- new_data %>%
     mutate(phecode = if_else(is.na(phecode), parent_phecode, phecode)) %>%
@@ -728,6 +729,20 @@ icd2phecode <- function(rec_data){
     filter(n() == 1 | age_diag == min(age_diag) ) %>% # this row is highly optimized, a lot faster the slice_min ### don't change
     slice(1) %>%
     dplyr::ungroup()
+
+  return(new_data)
+}
+
+snomed2phecode <- function(rec_data){
+  icd10_data <- rec_data %>%
+    mutate(diag_icd10 = as.character(diag_icd10)) %>% # seem to fix the bug
+    left_join(select(ATM::SNOMED_ICD10CM, SNOMED, ICD10), by = c("diag_icd10" = "SNOMED")) %>%
+    select(-diag_icd10) %>%
+    rename(diag_icd10 = ICD10) %>%
+    filter(!is.na(diag_icd10))
+  print(paste0((dim(icd10_data)[1]/dim(rec_data)[1])*100 ,"% of the SNOMED records are mapped to a ICD10 codes"))
+
+  new_data <- ATM::icd2phecode(icd10_data)
 
   return(new_data)
 }
