@@ -627,10 +627,13 @@ LASSO_predict <- function(rec_data, para){
 #' @param topic_loadings A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;
 #' @param max_predict The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis;
 #'
-#' @return
+#' @return The returned object has four components: OR_top1, OR_top2, OR_top5 is the prediction odds ratio using top 1%, top 2%, or top 5% of ATM predicted diseases as the target set;
+#' the fourth component prediction_precision is as list, with first element saves the prediction probability for 1%, 2%, 5% and 10%; additional variables saves the percentile of target disease in the ATM predicted set; for example
+#' 0.03 means the target disease ranked at 3% of the diseases ordered by ATM predicted probability.
 #' @export
 #'
-#' @examples
+#' @examples testing_data <- ATM::HES_age_example %>% slice(1:10000)
+#' new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease, topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
 prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 10){
   # first order the incidences by age
   testing_data <- testing_data %>%

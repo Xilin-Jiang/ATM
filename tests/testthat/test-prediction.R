@@ -15,6 +15,6 @@ test_that("test prediction odds ratio", {
   para_training$beta <- topic_loadings[50,,]
   output_old <- prediction_onebyone(testing_data, ds_list = disease_list, para_training, max_predict = 5)
   new_output <- prediction_OR(testing_data, ds_list = disease_list, topic_loadings =  para_training$beta, max_predict = 5)
-  expect_equal(output_old, new_output, tolerance = 0.01)
+  expect_equal(output_old, new_output$prediction_precision, tolerance = 0.01)
 })
 

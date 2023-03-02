@@ -18,7 +18,8 @@ Details of these topics are available in the paper "Age-dependent topic modellin
 comorbidities in UK Biobank identifies disease subtypes with differential genetic risk".}
 }
 \value{
-a data frame with the first column being the individual id, other columns are the topic weights mapped to the topic loadings.
+a list with two dataframes: the topic_weights dataframe has the first column being the individual id, the other columns are the patient topic weights mapped to the topic loadings;
+The second dataframe column incidence_weight_sum is eid and the cumulative topic weights across all disease diagnoses.
 }
 \description{
 Mapping individuals to fixed topic loadings.
