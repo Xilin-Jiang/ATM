@@ -155,17 +155,3 @@ SNOMED_ICD10CM <- SNOMED_ICD10CM %>%
   slice(1) %>%
   ungroup()
 usethis::use_data(SNOMED_ICD10CM, overwrite = TRUE)
-
-##########################################################################################
-############### just make a SNOMED2phecode function!!!!
-##########################################################################################
-SNOMED_examples <- read.table("~/Desktop/admin/data_access/Code_mapping/snomed_code_description_df.txt",
-                              sep = '\t', header = F, quote = "")
-rec_data <- data.frame(eid = 1:dim(SNOMED_examples)[1], diag_icd10 = SNOMED_examples$V2, age_diag = 1:dim(SNOMED_examples)[1])
-
-SNOMED_examples %>%
-  filter(V2 %in% SNOMED_ICD10CM$SNOMED) %>%
-  dim
-# pick the ICD10 with most UKBB appearance to map SNOMED to
-
-
