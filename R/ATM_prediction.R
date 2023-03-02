@@ -698,11 +698,13 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
     prediction_onebyone[[predict_num]]  <- rslt_predict[[1]]
     collect_prediction_ranks <- c(collect_prediction_ranks, rslt_predict[[2]])
   }
-  prediction_onebyone[[1]] <- list(mean(collect_prediction_ranks)/para_training$D,
-                                   mean( collect_prediction_ranks <= para_training$D/100),
-                                   mean( collect_prediction_ranks <= para_training$D/50),
-                                   mean( collect_prediction_ranks <= para_training$D/20),
-                                   mean( collect_prediction_ranks <= para_training$D/10) )
+
+  num_disease <- dim(ds_list)[1]
+  prediction_onebyone[[1]] <- list(mean(collect_prediction_ranks)/num_disease,
+                                   mean( collect_prediction_ranks <= num_disease/100),
+                                   mean( collect_prediction_ranks <= num_disease/50),
+                                   mean( collect_prediction_ranks <= num_disease/20),
+                                   mean( collect_prediction_ranks <= num_disease/10) )
 
   # compute the odds just based on disease prevalence
   test_prevelance <- testing_data %>%
@@ -711,17 +713,17 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
   total_num <- sum(test_prevelance$occ)
   freq_top1 <- test_prevelance %>%
     arrange(desc(occ)) %>%
-    slice(1:floor(para$D/100)) %>%
+    slice(1:floor(num_disease/100)) %>%
     pull(occ) %>%
     sum
   freq_top2 <- test_prevelance %>%
     arrange(desc(occ)) %>%
-    slice(1:floor(para$D/50)) %>%
+    slice(1:floor(num_disease/50)) %>%
     pull(occ) %>%
     sum
   freq_top5 <- test_prevelance %>%
     arrange(desc(occ)) %>%
-    slice(1:floor(para$D/20)) %>%
+    slice(1:floor(num_disease/20)) %>%
     pull(occ) %>%
     sum
   Odds_freq_list <- c(freq_top1, freq_top2, freq_top5)/total_num
