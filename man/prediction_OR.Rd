@@ -26,6 +26,6 @@ Title Compute prediction odds ratio for a testing data set using pre-training AT
 The prediction odds ratio is the odds predicted by ATM versus a naive prediction using disease probability.
 }
 \examples{
-testing_data <- ATM::HES_age_example \%>\% slice(1:10000)
+testing_data <- ATM::HES_age_example \%>\% dplyr::slice(1:10000)
 new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease, topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
 }

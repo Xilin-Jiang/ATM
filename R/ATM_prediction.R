@@ -84,7 +84,7 @@ prediction_onebyone <- function(testing_data, ds_list, para_training, max_predic
       dplyr::slice(1:(predict_num-1)) %>%
       dplyr::ungroup()
     if(is.null(para_training$P)){ # using P to determine if age is included
-      para_training$pi_beta_basis <- array( rep(para_training$beta, each = 81),dim =  c(81, para$D, para$K) )
+      para_training$pi_beta_basis <- array( rep(para_training$beta, each = 81),dim =  c(81, para_training$D, para_training$K) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
       para_testing <- topic_init_baseline(estimating_test_set, ds_list, para_training$K)
     }else{
@@ -632,7 +632,7 @@ LASSO_predict <- function(rec_data, para){
 #' 0.03 means the target disease ranked at 3% of the diseases ordered by ATM predicted probability.
 #' @export
 #'
-#' @examples testing_data <- ATM::HES_age_example %>% slice(1:10000)
+#' @examples testing_data <- ATM::HES_age_example %>% dplyr::slice(1:10000)
 #' new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease, topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
 prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 10){
   # first order the incidences by age
@@ -680,7 +680,7 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
     if(length(dim(topic_loadings)) < 3){ # if topic loading is just a matrix
       topic_loadings <- array( rep(topic_loadings, each = 81),dim =  c(81, dim(topic_loadings)[1], dim(topic_loadings)[2]) )
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
-      para_testing <- topic_init_baseline(estimating_test_set, ds_list, para_training$K)
+      para_testing <- topic_init_baseline(estimating_test_set, ds_list, dim(topic_loadings)[3])
     }else{
       para_testing <- topic_init_age(estimating_test_set, ds_list, dim(ATM::UKB_HES_10topics)[3], degree_free_num = 5) # just use 5, it won't matter
     }
