@@ -3,8 +3,9 @@
 # for tree and baseline, we basically assume topics are constant over age
 ##########################################
 # use the function below to estimate the probability that a disease appear in the top predicted disease list (1%, 2%, 5% 10%)
-prediction_ageLDA <- function(estimate_set, predict_set, alpha_z, estimate_eid, beta, diag_icd10){
+prediction_ageLDA <- function(estimate_set, predict_set, alpha_z, estimate_eid, beta, ds_list){
   predictions <- list()
+  diag_icd10 <- ds_list$diag_icd10
   code2id <- function(x){
     return( match(x, diag_icd10))
   }
@@ -35,12 +36,26 @@ prediction_ageLDA <- function(estimate_set, predict_set, alpha_z, estimate_eid, 
   # compute the specificity: first step remove the number of diseases used in estimation
   total_number <- length(diag_icd10) - mean(sapply(1:length(estimate_set), function(x) dim(estimate_set[[x]])[1]))
   predictions$mean_rank <- mean(beta_rank)/total_number
-  predictions$mean_rank_top1 <- mean( beta_rank <= total_number/100)
-  predictions$mean_rank_top2 <- mean( beta_rank <= total_number/50)
-  predictions$mean_rank_top5 <- mean( beta_rank <= total_number/20)
-  predictions$mean_rank_top10 <- mean( beta_rank <= total_number/10)
+  predictions$mean_probability_top1 <- mean( beta_rank <= total_number/100)
+  predictions$mean_probability_top2 <- mean( beta_rank <= total_number/50)
+  predictions$mean_probability_top5 <- mean( beta_rank <= total_number/20)
+  predictions$mean_probability_top10 <- mean( beta_rank <= total_number/10)
 
-  return(list(predictions, beta_rank))
+  # get the rank in the baseline model
+  disease_occ_rank <- rank(-ds_list$occ)
+  baseline_rank_all <- sapply(1:dim(theta_n)[1], function(n) # get the rank of diseases in prevelence
+    disease_occ_rank[c(predict_list_numeric$Ds_id[n],estimate_set[[predict_list_numeric$eid[n]]]$Ds_id)] )
+  baseline_rank <- baseline_rank_all[1, ] - sapply(1:dim(baseline_rank_all)[2], function(n)
+    sum(baseline_rank_all[1,n] > baseline_rank_all[2:dim(baseline_rank_all)[1],n]))
+
+  baselind_prevelance_predictions <- list()
+  baselind_prevelance_predictions$baseline_rank <- mean(baseline_rank)/total_number
+  baselind_prevelance_predictions$baseline_prevelance_top1 <- mean( baseline_rank <= total_number/100)
+  baselind_prevelance_predictions$baseline_prevelance_top2 <- mean( baseline_rank <= total_number/50)
+  baselind_prevelance_predictions$baseline_prevelance_top5 <- mean( baseline_rank <= total_number/20)
+  baselind_prevelance_predictions$baseline_prevelance_top10 <- mean( baseline_rank <= total_number/10)
+
+  return(list(predictions, beta_rank, baselind_prevelance_predictions, baseline_rank))
 }
 # using function below to perform onebyone prediction
 prediction_onebyone <- function(testing_data, ds_list, para_training, max_predict){
@@ -114,7 +129,7 @@ prediction_onebyone <- function(testing_data, ds_list, para_training, max_predic
         }
       })
     }
-    rslt_predict <- prediction_ageLDA(para_testing$w, predicting_test_set, para_testing$alpha_z, para_testing$eid, para_training$pi_beta_basis, para_training$list_above500occu$diag_icd10)
+    rslt_predict <- prediction_ageLDA(para_testing$w, predicting_test_set, para_testing$alpha_z, para_testing$eid, para_training$pi_beta_basis, para_training$list_above500occu)
     prediction_onebyone[[predict_num]]  <- rslt_predict[[1]]
     collect_prediction_ranks <- c(collect_prediction_ranks, rslt_predict[[2]])
   }
@@ -335,7 +350,7 @@ save_prediction_logics <- function(testing_data, ds_list, para_training, max_pre
 
     collect_zn[[predict_num]]  <- para_testing$unlist_zn
     collect_estimate_set[[predict_num]]  <- estimating_test_set
-    rslt_predict <- prediction_ageLDA(para_testing$w, predicting_test_set, para_testing$alpha_z, para_testing$eid, para_training$pi_beta_basis, para_training$list_above500occu$diag_icd10)
+    rslt_predict <- prediction_ageLDA(para_testing$w, predicting_test_set, para_testing$alpha_z, para_testing$eid, para_training$pi_beta_basis, para_training$list_above500occu)
     collect_prediction_ranks <- c(collect_prediction_ranks, rslt_predict[[2]])
   }
   return(list(collect_zn, collect_estimate_set, collect_prediction_ranks, testing_data))
@@ -624,8 +639,10 @@ LASSO_predict <- function(rec_data, para){
 #'
 #' @param testing_data A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing.
 #' @param ds_list The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
+#' The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.
 #' @param topic_loadings A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;
-#' @param max_predict The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis;
+#' @param max_predict The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis; we perform this prediction in turn, starting from using first disease to predict sencond....
+#' for the max_predict^th disease, we will just predict all diseases afterwards, using only 1,..(max_predict-1) diseseas to learn the topic weights; default is set to be 11 (using 1,...10 disease to predict).
 #'
 #' @return The returned object has four components: OR_top1, OR_top2, OR_top5 is the prediction odds ratio using top 1%, top 2%, or top 5% of ATM predicted diseases as the target set;
 #' the fourth component prediction_precision is as list, with first element saves the prediction probability for 1%, 2%, 5% and 10%; additional variables saves the percentile of target disease in the ATM predicted set; for example
@@ -633,8 +650,9 @@ LASSO_predict <- function(rec_data, para){
 #' @export
 #'
 #' @examples testing_data <- ATM::HES_age_example %>% dplyr::slice(1:10000)
-#' new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease, topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
-prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 10){
+#' new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease,
+#'                  topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
+prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 11){
   # first order the incidences by age
   testing_data <- testing_data %>%
     filter(diag_icd10 %in% ds_list$diag_icd10) %>% # only keep the diseases in ds_list
@@ -647,6 +665,8 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
 
   prediction_onebyone <- list()
   collect_prediction_ranks <- c()
+  length_of_estimate_set <- c()
+  collect_baseline_ranks <- c()
 
   for(predict_num in 2:max_predict){
     testing_eid_included <- testing_data %>% # set incidence number threshold for inclusion in testing set
@@ -694,46 +714,34 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
     # alpha_z: topic weights; beta: topic loadings; diag_icd10: the disease list in the topic loading (in case some disease is not there)
     rslt_predict <- prediction_ageLDA(estimate_set = para_testing$w, predict_set = predicting_test_set,
                                       alpha_z = alpha_z, estimate_eid = para_testing$eid,
-                                      beta = topic_loadings, diag_icd10 = ds_list$diag_icd10)
+                                      beta = topic_loadings, ds_list = ds_list)
     prediction_onebyone[[predict_num]]  <- rslt_predict[[1]]
     collect_prediction_ranks <- c(collect_prediction_ranks, rslt_predict[[2]])
-  }
+    collect_baseline_ranks <- c(collect_baseline_ranks, rslt_predict[[4]])
+    # get the length of predicted sets to exctract from the numbers
+    length_of_estimate_set <- c(length_of_estimate_set,
+                                sapply(1:length(para_testing$w), function(x) dim(para_testing$w[[x]])[1]))
 
-  num_disease <- dim(ds_list)[1]
+  }
+  # need to extract total number of diseases used during the estimation stage, just use the average
+  num_disease <- dim(ds_list)[1] - mean(length_of_estimate_set)
   prediction_onebyone[[1]] <- list(mean(collect_prediction_ranks)/num_disease,
                                    mean( collect_prediction_ranks <= num_disease/100),
                                    mean( collect_prediction_ranks <= num_disease/50),
                                    mean( collect_prediction_ranks <= num_disease/20),
                                    mean( collect_prediction_ranks <= num_disease/10) )
-
-  # compute the odds just based on disease prevalence
-  test_prevelance <- testing_data %>%
-    group_by(diag_icd10) %>%
-    summarise(occ = n())
-  total_num <- sum(test_prevelance$occ)
-  freq_top1 <- test_prevelance %>%
-    arrange(desc(occ)) %>%
-    slice(1:floor(num_disease/100)) %>%
-    pull(occ) %>%
-    sum
-  freq_top2 <- test_prevelance %>%
-    arrange(desc(occ)) %>%
-    slice(1:floor(num_disease/50)) %>%
-    pull(occ) %>%
-    sum
-  freq_top5 <- test_prevelance %>%
-    arrange(desc(occ)) %>%
-    slice(1:floor(num_disease/20)) %>%
-    pull(occ) %>%
-    sum
-  Odds_freq_list <- c(freq_top1, freq_top2, freq_top5)/total_num
-  Odds_freq_list <- Odds_freq_list/(1-Odds_freq_list)
+  prediction_prevalence_baseline <- list(mean(collect_baseline_ranks)/num_disease,
+                                         mean( collect_baseline_ranks <= num_disease/100),
+                                         mean( collect_baseline_ranks <= num_disease/50),
+                                         mean( collect_baseline_ranks <= num_disease/20),
+                                         mean( collect_baseline_ranks <= num_disease/10) )
 
   prdict_OR <- list()
   # compute the disease prevalence just using testing_data.
-  prdict_OR$OR_top1 <- (prediction_onebyone[[1]][[2]]/(1 - prediction_onebyone[[1]][[2]]))/Odds_freq_list[1]
-  prdict_OR$OR_top2 <- (prediction_onebyone[[1]][[3]]/(1 - prediction_onebyone[[1]][[3]]))/Odds_freq_list[2]
-  prdict_OR$OR_top5 <- (prediction_onebyone[[1]][[4]]/(1 - prediction_onebyone[[1]][[4]]))/Odds_freq_list[3]
+  prdict_OR$OR_top1 <- (prediction_onebyone[[1]][[2]]/(1 - prediction_onebyone[[1]][[2]]))/(prediction_prevalence_baseline[[2]]/(1-prediction_prevalence_baseline[[2]]))
+  prdict_OR$OR_top2 <- (prediction_onebyone[[1]][[3]]/(1 - prediction_onebyone[[1]][[3]]))/(prediction_prevalence_baseline[[3]]/(1-prediction_prevalence_baseline[[3]]))
+  prdict_OR$OR_top5 <- (prediction_onebyone[[1]][[4]]/(1 - prediction_onebyone[[1]][[4]]))/(prediction_prevalence_baseline[[4]]/(1-prediction_prevalence_baseline[[4]]))
+  prdict_OR$OR_top10 <- (prediction_onebyone[[1]][[4]]/(1 - prediction_onebyone[[1]][[5]]))/(prediction_prevalence_baseline[[5]]/(1-prediction_prevalence_baseline[[5]]))
   prdict_OR$prediction_precision <- prediction_onebyone
 
   return(prdict_OR)
