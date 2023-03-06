@@ -5,16 +5,18 @@
 \title{Title Compute prediction odds ratio for a testing data set using pre-training ATM topic loading. Note only diseases listed in the ds_list will be used.
 The prediction odds ratio is the odds predicted by ATM versus a naive prediction using disease probability.}
 \usage{
-prediction_OR(testing_data, ds_list, topic_loadings, max_predict = 10)
+prediction_OR(testing_data, ds_list, topic_loadings, max_predict = 11)
 }
 \arguments{
 \item{testing_data}{A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing.}
 
-\item{ds_list}{The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.}
+\item{ds_list}{The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
+The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.}
 
 \item{topic_loadings}{A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;}
 
-\item{max_predict}{The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis;}
+\item{max_predict}{The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis; we perform this prediction in turn, starting from using first disease to predict sencond....
+for the max_predict^th disease, we will just predict all diseases afterwards, using only 1,..(max_predict-1) diseseas to learn the topic weights; default is set to be 11 (using 1,...10 disease to predict).}
 }
 \value{
 The returned object has four components: OR_top1, OR_top2, OR_top5 is the prediction odds ratio using top 1\%, top 2\%, or top 5\% of ATM predicted diseases as the target set;
@@ -27,5 +29,6 @@ The prediction odds ratio is the odds predicted by ATM versus a naive prediction
 }
 \examples{
 testing_data <- ATM::HES_age_example \%>\% dplyr::slice(1:10000)
-new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease, topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
+new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease,
+                 topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
 }
