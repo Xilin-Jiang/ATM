@@ -648,6 +648,13 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
     topics[[cvb_rep]] <- para$pi_beta_basis
     ELBOs[[cvb_rep]]  <- para$lb
     topic_weights[[cvb_rep]] <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
+
+    if(save_data){
+      print(paste0("Saving full model for CVB rep", cvb_rep))
+      dir.create("Results")
+      save(para, file = paste0("Results/","fullmodel_ATM_cvbrep_", cvb_rep, "K",para$K,"_P",para$P, ".RData"))
+      }
+
   }
   multi_runs <- list(topics, ELBOs)
   # find the best reps in the data
@@ -665,7 +672,6 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
   # save a smaller dataset
   model_output <- list(topics[[best_id]], ELBOs[[best_id]], para$D, para$M, para$K, para$P, lb_rep)
   if(save_data){
-    dir.create("Results")
     save(multi_runs, file = paste0("Results/","multirun", CVB_num, "K",para$K,"_P",para$P, ".RData"))
     save(model_output, file = paste0("Results/","best_output_AgeLDA_RunNumber", CVB_num, "K",para$K,"_P",para$P, ".RData"))
   }
