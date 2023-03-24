@@ -207,9 +207,9 @@ loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10
   para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
 
   # update z_n until convergence
-  para$max_itr <- 10
+  para$max_itr <- 20
   para$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para))
-  para$tol <- 10^(-6)
+  para$tol <- 10^(-7)
   for(itr in 1:para$max_itr){
     print(paste0("Interation: ",itr))
     para <- CVB0_E_zn(para) # we choose CVB0 as papers shown it could converge quicker
