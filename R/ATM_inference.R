@@ -207,7 +207,7 @@ loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10
   para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
 
   # update z_n until convergence
-  para$max_itr <- 20
+  para$max_itr <- 50
   para$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para))
   para$tol <- 10^(-7)
   for(itr in 1:para$max_itr){

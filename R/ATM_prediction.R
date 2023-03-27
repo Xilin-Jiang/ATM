@@ -652,7 +652,7 @@ LASSO_predict <- function(rec_data, para){
 #' @examples testing_data <- ATM::HES_age_example %>% dplyr::slice(1:10000)
 #' new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease,
 #'                  topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
-prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 11){
+prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = NULL){
   # first order the incidences by age
   testing_data <- testing_data %>%
     filter(diag_icd10 %in% ds_list$diag_icd10) %>% # only keep the diseases in ds_list
@@ -667,6 +667,17 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
   collect_prediction_ranks <- c()
   length_of_estimate_set <- c()
   collect_baseline_ranks <- c()
+
+  # set the max_predict to be either 30 or the longest record list of all individuals
+  if(is.null(max_predict)){
+    max_rec_num <- testing_data %>% # set incidence number threshold for inclusion in testing set
+      group_by(eid) %>%
+      summarise(rec_per_indv = n()) %>%
+      summarise(max(rec_per_indv)) %>%
+      pull(1)
+    max_predict <- min(max_rec_num, 30)
+  }
+
 
   for(predict_num in 2:max_predict){
     testing_eid_included <- testing_data %>% # set incidence number threshold for inclusion in testing set
@@ -738,10 +749,14 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = 1
 
   prdict_OR <- list()
   # compute the disease prevalence just using testing_data.
-  prdict_OR$OR_top1 <- (prediction_onebyone[[1]][[2]]/(1 - prediction_onebyone[[1]][[2]]))/(prediction_prevalence_baseline[[2]]/(1-prediction_prevalence_baseline[[2]]))
-  prdict_OR$OR_top2 <- (prediction_onebyone[[1]][[3]]/(1 - prediction_onebyone[[1]][[3]]))/(prediction_prevalence_baseline[[3]]/(1-prediction_prevalence_baseline[[3]]))
-  prdict_OR$OR_top5 <- (prediction_onebyone[[1]][[4]]/(1 - prediction_onebyone[[1]][[4]]))/(prediction_prevalence_baseline[[4]]/(1-prediction_prevalence_baseline[[4]]))
-  prdict_OR$OR_top10 <- (prediction_onebyone[[1]][[4]]/(1 - prediction_onebyone[[1]][[5]]))/(prediction_prevalence_baseline[[5]]/(1-prediction_prevalence_baseline[[5]]))
+  prdict_OR$OR_top1 <- (mean( collect_prediction_ranks <= num_disease/100)/(1 - mean( collect_prediction_ranks <= num_disease/100)))/
+    (mean( collect_baseline_ranks <= num_disease/100)/(1 - mean( collect_baseline_ranks <= num_disease/100)))
+  prdict_OR$OR_top2 <- (mean( collect_prediction_ranks <= num_disease/50)/(1 - mean( collect_prediction_ranks <= num_disease/50)))/
+    (mean( collect_baseline_ranks <= num_disease/50)/(1 - mean( collect_baseline_ranks <= num_disease/50)))
+  prdict_OR$OR_top5 <- (mean( collect_prediction_ranks <= num_disease/20)/(1 - mean( collect_prediction_ranks <= num_disease/20)))/
+    (mean( collect_baseline_ranks <= num_disease/20)/(1 - mean( collect_baseline_ranks <= num_disease/20)))
+  prdict_OR$OR_top10 <- (mean( collect_prediction_ranks <= num_disease/10)/(1 - mean( collect_prediction_ranks <= num_disease/10)))/
+    (mean( collect_baseline_ranks <= num_disease/10)/(1 - mean( collect_baseline_ranks <= num_disease/10)))
   prdict_OR$prediction_precision <- prediction_onebyone
 
   return(prdict_OR)
