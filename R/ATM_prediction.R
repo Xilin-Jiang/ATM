@@ -637,7 +637,7 @@ LASSO_predict <- function(rec_data, para){
 #' Title Compute prediction odds ratio for a testing data set using pre-training ATM topic loading. Note only diseases listed in the ds_list will be used.
 #' The prediction odds ratio is the odds predicted by ATM versus a naive prediction using disease probability.
 #'
-#' @param testing_data A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing.
+#' @param testing_data A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing. Note the test data that has diagnosis age outside the topic loading is disgarded, as we don't recommend extrapolate topic loadings outside the training data.
 #' @param ds_list The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
 #' The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.
 #' @param topic_loadings A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;
@@ -655,7 +655,7 @@ LASSO_predict <- function(rec_data, para){
 prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = NULL){
   # first order the incidences by age
   testing_data <- testing_data %>%
-    filter(diag_icd10 %in% ds_list$diag_icd10) %>% # only keep the diseases in ds_list
+    filter(diag_icd10 %in% ds_list$diag_icd10, age_diag <= dim(topic_loadings)[1]) %>% # only keep the diseases in ds_list; also make sure only predict diseases
     group_by(eid, diag_icd10) %>%
     arrange(age_diag, .by_group = T) %>% # keep only the first records of repeated diagnosis
     dplyr::slice(1) %>%
