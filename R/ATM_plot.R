@@ -52,11 +52,11 @@ plot_age_topics <- function(disease_names, trajs,  plot_title = "", start_age = 
       ggrepel::geom_label_repel(data = legend, aes(x = x_pos, y = y_pos, label = ds_label,fontface = "bold"),color = col_ds ) + # , vjust = "inward", hjust = "inward") +
       theme_bw(base_size = 20) +
       geom_line(aes(x = age, y = inferred_topics), color = col_ds[1], size = 1.5) +
-      labs(x="Age", y="Multinomial probability", title=plot_title)
+      labs(x="Age", y="Topic loading", title=plot_title)
   }else{
     plt <- ggplot(data = df_topics, aes(x = age)) +
       theme_bw(base_size = 20) +
-      labs(x="Age", y="Multinomial probability", title=plot_title)
+      labs(x="Age", y="Topic loading", title=plot_title)
     for(line_id in 1:length(dominant_ds_id)){
       plt <- plt +
         geom_line(aes_string(y = paste0("inferred_topics.",line_id) ), size = 1.5, color = col_ds[line_id])
