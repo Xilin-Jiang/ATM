@@ -125,6 +125,16 @@ plot_age_topics(disease_names = disease_list,
         top_ds = 7)
 ```
 
+## Analysing comorbidity subtype of diseases
+We reported in the [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2) that patients of the same diseases that have different comorbidities has distinct genetic profiles, even after accounting for the genetic backgrounds of these comorbidities (i.e. after correcting for collider effects). We define these as comorbidity subtypes based on *topic weight*.  *topic weight* could be extracted from either from the output of `wrapper_ATM` function (see [Inferring disease topics using diagnosis data](#inferring-disease-topics-using-diagnosis-data) section) or the output of `loading2weights` function (see [Inferring comorbidity profiles for individuals](#inferring-comorbidity-profiles-for-individuals) section). For example, for analysing comorbidity subtypes from the `wrapper_ATM` outputs, users could extract the *topic weights* which is a $\mathcal{R}^{M \times K}$ matrix. The columns are ordered as the *topic loadings*, while the rows are ordered as the `ATM_results$patient_list`.  
+```r
+ATM_results <- wrapper_ATM(rec_data=HES_age_example, topic_num = 10, CVB_num = 1)
+print(ATM_results$multiple_run_ELBO_compare)
+subtypes_atm <- data.frame(individual_id = ATM_results$patient_list, topic_weights = ATM_results$topic_weights)
+```
+Users could then select the set of patients (by subsetting based on `individual_id` of `subtypes_atm`) or which comorbidity subtypes they want to analysis (by selecting columns of the `subtypes_atm`). As an example, in Figure 5 of the [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2), we analysed the correlation of PRS with topic weights; PRS enriched in the type 2 diabete patients with elevated CVD topic suggested the CVD subtype patients are more driven by genetic risk factors. 
+
+The `topic_weights` of the output of `loading2weights` function has the same format as `subtypes_atm` from example above. 
 
 ## Generative process of ATM
 
