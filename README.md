@@ -132,7 +132,7 @@ ATM_results <- wrapper_ATM(rec_data=HES_age_example, topic_num = 10, CVB_num = 1
 print(ATM_results$multiple_run_ELBO_compare)
 subtypes_atm <- data.frame(individual_id = ATM_results$patient_list, topic_weights = ATM_results$topic_weights)
 ```
-Users could then select the set of patients (by subsetting based on `individual_id` of `subtypes_atm`) or which comorbidity subtypes they want to analysis (by selecting columns of the `subtypes_atm`). As an example, in Figure 5 of the [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2), we analysed the correlation of PRS with topic weights; PRS enriched in the type 2 diabete patients with elevated CVD topic suggested the CVD subtype patients are more driven by genetic risk factors. 
+Users could then select the set of patients (by subsetting based on `individual_id` of `subtypes_atm`) or which comorbidity subtypes they want to analysis (by selecting columns of the `subtypes_atm`). As an example, in Figure 5 of the [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2), we analysed the correlation of PRS with topic weights; PRS enriched in the type 2 diabete patients with elevated CVD topic suggested the CVD subtype patients are more driven by genetic risk factors. You could visualise the comorbidity profiles associated with each disease subtype using code from section above. 
 
 The `topic_weights` of the output of `loading2weights` function has the same format as `subtypes_atm` from example above. 
 
