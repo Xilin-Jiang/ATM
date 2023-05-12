@@ -5,10 +5,10 @@
 \title{Title Compute prediction odds ratio for a testing data set using pre-training ATM topic loading. Note only diseases listed in the ds_list will be used.
 The prediction odds ratio is the odds predicted by ATM versus a naive prediction using disease probability.}
 \usage{
-prediction_OR(testing_data, ds_list, topic_loadings, max_predict = 11)
+prediction_OR(testing_data, ds_list, topic_loadings, max_predict = NULL)
 }
 \arguments{
-\item{testing_data}{A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing.}
+\item{testing_data}{A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing. Note the test data that has diagnosis age outside the topic loading is disgarded, as we don't recommend extrapolate topic loadings outside the training data.}
 
 \item{ds_list}{The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
 The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.}

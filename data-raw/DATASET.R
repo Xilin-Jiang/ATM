@@ -96,6 +96,16 @@ phecode_icd10 <- read.csv(paste0(DIR,"phecode_icd10.csv")) %>%
   select(ICD10, PheCode, Excl..Phecodes, Excl..Phenotypes)
 usethis::use_data(phecode_icd10, overwrite = TRUE)
 
+short_icd10 <- phecode_icd10 %>%
+  mutate(ICD10 = substring(ICD10, 1,4)) %>%
+  left_join(non_one2one_map, by = c("PheCode" = "phecode")) %>%
+  group_by(ICD10) %>%
+  arrange( desc(occ), .by_group = T, ) %>%
+  dplyr::slice(1) %>%
+  dplyr::ungroup() %>%
+  rename(parent_phecode = PheCode)
+usethis::use_data(short_icd10, overwrite = TRUE)
+
 # save a phecode classifications for future plotting
 disease_info_phecode_icd10 <- read.csv(paste0(DIR, "Phecode_map_v1_2_icd10cm_beta.csv")) %>%
   group_by(phecode) %>%

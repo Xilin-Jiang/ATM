@@ -720,7 +720,7 @@ icd2phecode <- function(rec_data){
     left_join(phecode_icd10cm, by = c("diag_icd10" = "ICD10")) %>%
     mutate(diag_icd10 = substring(diag_icd10, 1,4)) %>%
     left_join(phecode_icd10, by = c("diag_icd10" = "ICD10"))  %>%
-    left_join(short_icd10cm, by = c("diag_icd10" = "ICD10"))
+    left_join(short_icd10, by = c("diag_icd10" = "ICD10"))
 
   not_mapped <- new_data %>% filter(is.na(phecode), is.na(PheCode), is.na(parent_phecode)) %>% dim
   print(paste0((1-not_mapped[1]/dim(new_data)[1])*100 ,"% of the icd10 disease records are mapped to Phecodes"))
