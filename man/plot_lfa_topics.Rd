@@ -9,14 +9,9 @@ plot_lfa_topics(disease_names, beta, plot_title = "")
 \arguments{
 \item{disease_names}{the list of disease names, ordered as the topic.}
 
+\item{beta}{disease topics, which should be a matrix of K-by-disease.}
+
 \item{plot_title}{the title of the figure.}
-
-\item{trajs}{one disease topic, which should be a matrix of age-by-disease.}
-
-\item{start_age}{starting age of the matrix, default 30.}
-
-\item{top_ds}{How many disease to show, default is 10. This will filter the disease by
-the average topic laodings across age and pick the top.}
 }
 \value{
 a ggplot object of the topic loading.

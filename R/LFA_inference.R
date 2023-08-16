@@ -144,7 +144,7 @@ update_beta_lfa <- function(para){
 #' @export
 #'
 #' @examples   HES_age_small_sample <- HES_age_example %>% dplyr::group_by(eid) %>%
-#' dplyr::slice_sample(prop = 0.1)
+#' dplyr::slice_sample(prop = 0.01)
 #' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
 wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
   ds_list <- rec_data %>%
@@ -233,11 +233,8 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
 #' Title plot topic loadings for LFA.
 #'
 #' @param disease_names the list of disease names, ordered as the topic.
-#' @param trajs one disease topic, which should be a matrix of age-by-disease.
+#' @param beta disease topics, which should be a matrix of K-by-disease.
 #' @param plot_title the title of the figure.
-#' @param start_age starting age of the matrix, default 30.
-#' @param top_ds How many disease to show, default is 10. This will filter the disease by
-#' the average topic laodings across age and pick the top.
 #'
 #' @return a ggplot object of the topic loading.
 #' @export
