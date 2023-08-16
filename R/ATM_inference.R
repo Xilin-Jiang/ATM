@@ -49,8 +49,6 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
     mutate(id = dplyr::row_number()) %>%
     group_by(Ds_id) %>%
     dplyr::group_split()
-  print("ATM RAM occupation: ")
-  print(object.size(para$w), unit = "MB" , standard = "SI")
 
   # initiate beta
   para$eta <- rgamma(para$D,shape = 100, rate = 100)
@@ -72,6 +70,9 @@ topic_init_baseline <- function(rec_data, ds_list, topic_num){
 
   # eventually reset alpha to be non-informative
   para$alpha <- rep(1, para$K)
+
+  print("ATM RAM occupation: ")
+  print(object.size(para), unit = "GB" , standard = "SI")
 
   return(para)
 }
@@ -131,8 +132,6 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
     mutate(id = dplyr::row_number()) %>%
     group_by(Ds_id) %>%
     dplyr::group_split()
-  print("ATM RAM occupation: ")
-  print(object.size(para$w), unit = "MB" , standard = "SI")
 
   # create an age matrix for each disease, it is a list same length as para$w, each of Ns-by-F matrix
   para$age_max <- first_incidence_age %>%
@@ -176,6 +175,10 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 
   # eventually reset alpha to be non-informative
   para$alpha <- rep(1, para$K)
+
+  print("ATM RAM occupation: ")
+  print(object.size(para), unit = "GB" , standard = "SI")
+
   return(para)
 }
 

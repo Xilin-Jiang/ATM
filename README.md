@@ -163,3 +163,15 @@ The generative process (Supplementary Figure 1) is as follows:
 - $w \in \{1,2,...,D\}^{\sum_s N_s}$ are observed diagnoses. The $n^{th}$ diagnosis of $s^{th}$ individual $w_{sn}$ is sampled from the topic $\beta_{z_{sn}}(t)$ chosen by $z_{sn}$:
   $$w_{sn} \sim Multi(\beta_{z_{sn}}(t_{sn})),$$
   here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis $w_{sn}$.
+
+## GWAS using Latent Feature Allocation (LFA)
+For GWAS on comorbidities, we recommend using Latent Feature Allocation (LFA) which is infers topic weights that are more suitable for GWAS. Details of the LFA model is in the [comorbidity GWAS (Zhang, Jiang, et al. 2023 Cell Genomics)](https://www.cell.com/cell-genomics/pdf/S2666-979X(23)00166-0.pdf) paper. We have now implemented a collapsed variational inference methods of LFA, which is several magnitude faster than the original Gibb's sampling method, while using similar memory. 
+
+LFA model could be run similarly as ATM. The input data should be format data as `HES_age_example`; first column is individual ID, second column is the disease code; while the third column (age-at-diagnosis) became optional as LFA does not model age. 
+
+```r
+library(ATM)
+# head(HES_age_example)
+ATM <- wrapper_LFA(HES_age_example, 10, CVB_num = 1)
+```
+
