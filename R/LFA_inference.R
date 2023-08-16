@@ -229,5 +229,60 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
   return(output)
 }
 
+# plot topic loadings for LFA
+#' Title plot topic loadings for LFA.
+#'
+#' @param disease_names the list of disease names, ordered as the topic.
+#' @param trajs one disease topic, which should be a matrix of age-by-disease.
+#' @param plot_title the title of the figure.
+#' @param start_age starting age of the matrix, default 30.
+#' @param top_ds How many disease to show, default is 10. This will filter the disease by
+#' the average topic laodings across age and pick the top.
+#'
+#' @return a ggplot object of the topic loading.
+#' @export
+#'
+#' @examples disease_list <- UKB_349_disease$diag_icd10[1:50]
+#' topics <- matrix(rnorm(10*length(UKB_349_disease)), nrow = length(UKB_349_disease), ncol = 10)
+#' plot_age_topics(disease_names = disease_list,
+#'         beta = topics,
+#'         plot_title = "Example noisy topics presentation, topics with less than 50 diseases will be presented with disease names")
+plot_lfa_topics <- function(disease_names, beta,  plot_title = ""){
+  longData <- reshape2::melt(beta) %>%
+    mutate(Var1 =disease_names[Var1])
+  longData <- longData %>%
+    mutate(Var1 = factor(Var1, levels = disease_names))
+  if(length(disease_names) <= 50){
+    plt <- ggplot() +
+      ggplot2::geom_tile(data = longData, aes(x = Var2, y = Var1, fill=red, alpha = value,width = 0.9)) +
+      ggplot2::scale_alpha_continuous(range = c(0,1)) +
+      ggplot2::labs(x="", y="", title="") +
+      ggplot2::scale_x_discrete(expand=c(0,0)) +
+      ggplot2::scale_y_discrete(expand=c(0,0)) +
+      ggplot2::theme(axis.line=ggplot2::element_blank(),axis.text.x=ggplot2::element_blank(),
+                     axis.ticks=ggplot2::element_blank(),
+                     axis.title.x=ggplot2::element_blank(),
+                     axis.title.y=ggplot2::element_blank(),legend.position="none",
+                     panel.background=ggplot2::element_blank(),panel.border=ggplot2::element_blank(),panel.grid.major=ggplot2::element_blank(),
+                     panel.grid.minor=ggplot2::element_blank(),plot.background=ggplot2::element_blank())
+  }else{
+    print("Too many diseases (>50), hide the disease name.")
+    plt <- ggplot() +
+      ggplot2::geom_tile(data = longData, aes(x = Var2, y = Var1, fill=red, alpha = value,width = 0.9)) +
+      ggplot2::scale_alpha_continuous(range = c(0,1)) +
+      ggplot2::labs(x="", y="", title="") +
+      ggplot2::scale_x_discrete(expand=c(0,0)) +
+      ggplot2::scale_y_discrete(expand=c(0,0)) +
+      ggplot2::theme(axis.line=ggplot2::element_blank(),axis.text.x=ggplot2::element_blank(),
+                     axis.text.y=ggplot2::element_blank(),axis.ticks=ggplot2::element_blank(),
+                     axis.title.x=ggplot2::element_blank(),
+                     axis.title.y=ggplot2::element_blank(),legend.position="none",
+                     panel.background=ggplot2::element_blank(),panel.border=ggplot2::element_blank(),panel.grid.major=ggplot2::element_blank(),
+                     panel.grid.minor=ggplot2::element_blank(),plot.background=ggplot2::element_blank())
+  }
+  return(plt)
+}
+
+
 
 
