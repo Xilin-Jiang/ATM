@@ -7,6 +7,8 @@ ATM assigns to each individual topic weights for several disease topics; each di
 
 For bug reports, please email: <xilinjiang@hsph.harvard.edu>. 
 
+Note: ATM is designed for identifying disease subtypes and infer comorbidity trajectories, but not for performing GWAS (due to the likelihood structure). For GWAS we recommend using LFA, see [GWAS using Latent Feature Allocation (LFA)](#gwas-using-latent-feature-allocation-lfa). 
+
 ## Installation
 
 You can install the development version of ATM from [GitHub](https://github.com/ATM) with:
@@ -164,14 +166,24 @@ The generative process (Supplementary Figure 1) is as follows:
   $$w_{sn} \sim Multi(\beta_{z_{sn}}(t_{sn})),$$
   here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis $w_{sn}$.
 
-## GWAS using Latent Feature Allocation (LFA)
-For GWAS on comorbidities, we recommend using Latent Feature Allocation (LFA) which is infers topic weights that are more suitable for GWAS. Details of the LFA model is in the [comorbidity GWAS (Zhang, Jiang, et al. 2023 Cell Genomics)](https://www.cell.com/cell-genomics/pdf/S2666-979X(23)00166-0.pdf) paper. We have now implemented a collapsed variational inference methods of LFA, which is several magnitude faster than the original Gibb's sampling method, while using similar memory. 
+## GWAS using Latent Feature Allocation LFA
+For GWAS on comorbidities, we recommend using Latent Feature Allocation (LFA) which infers topic weights that are more suitable for GWAS. Details of the LFA model is in the [comorbidity GWAS (Zhang, Jiang, et al. 2023 Cell Genomics)](https://www.cell.com/cell-genomics/pdf/S2666-979X(23)00166-0.pdf) paper. We have now implemented a collapsed variational inference methods of LFA, which is several magnitude faster than the original Gibb's sampling method, while using similar amount of memory. 
 
-LFA model could be run similarly as ATM. The input data should be format data as `HES_age_example`; first column is individual ID, second column is the disease code; while the third column (age-at-diagnosis) became optional as LFA does not model age. 
+A comparison of LFA and ATM is as below. ATM only models disease records (left) while LFA could model both patient and healthy individual (right). We have found models including LFA that uses non-sparse coding of disease topics to be more powerful at identifying disease loci.  
+
+![My Image](ATM_LFA_comparison.png)
+
+LFA model could be run similarly as ATM. The input data should be format data as `HES_age_example`; first column is individual ID, second column is the disease code; while the third column (age-at-diagnosis) became optional as LFA does not model age. Below is an example inferring 10 topics using LFA. 
 
 ```r
 library(ATM)
 # head(HES_age_example)
-ATM <- wrapper_LFA(HES_age_example, 10, CVB_num = 1)
+LFA_results <- wrapper_LFA(HES_age_example, 10, CVB_num = 1)
 ```
-
+Details of the output format could be reached by `?wrapper_LFA`. Specifically, (1) `LFA_results$topic_weights` are the *topic weights* that should be used for GWAS; it is ordered as the patient list `LFA_results$patient_list`; (2) `LFA_results$topic_loadings` are the *topic loadings* that could be visualised using following code: 
+```r
+library(ATM)
+# head(HES_age_example)
+plt <- plot_lfa_topics(LFA_results$ds_list$diag_icd10, beta = LFA_results$topic_loadings,  plot_title = "LFA topics")
+plt
+```

@@ -138,12 +138,12 @@ update_beta_lfa <- function(para){
 #' @param CVB_num Number of runs with random initialization. The final output will be the run with highest ELBO value.
 #' @param save_data A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.
 #'
-#' @return Reture a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
+#' @return Return a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
 #' patient_list (list of eid which correspond to rows of topic_weights), ds_list (gives the ordering of diseases in the topic_loadings object), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
 #' ,multiple_run_ELBO_compare (ELBO of each runs).
 #' @export
 #'
-#' @examples   HES_age_small_sample <- HES_age_example %>%
+#' @examples   HES_age_small_sample <- HES_age_example %>% dplyr::group_by(eid) %>%
 #' dplyr::slice_sample(prop = 0.1)
 #' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
 wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
@@ -244,9 +244,9 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
 #'
 #' @examples disease_list <- UKB_349_disease$diag_icd10[1:50]
 #' topics <- matrix(rnorm(10*length(UKB_349_disease)), nrow = length(UKB_349_disease), ncol = 10)
-#' plot_age_topics(disease_names = disease_list,
+#' plot_lfa_topics(disease_names = disease_list,
 #'         beta = topics,
-#'         plot_title = "Example noisy topics presentation, topics with less than 50 diseases will be presented with disease names")
+#'         plot_title = "Example noisy topics presentation")
 plot_lfa_topics <- function(disease_names, beta,  plot_title = ""){
   longData <- reshape2::melt(beta) %>%
     mutate(Var1 =disease_names[Var1])
