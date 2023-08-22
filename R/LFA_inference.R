@@ -145,7 +145,7 @@ update_beta_lfa <- function(para){
 #' @export
 #'
 #' @examples   HES_age_small_sample <- HES_age_example %>% dplyr::group_by(eid) %>%
-#' dplyr::slice_sample(prop = 0.01)
+#' dplyr::slice_sample(prop = 0.05)
 #' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
 wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_weight_prior=NULL){
   ds_list <- rec_data %>%

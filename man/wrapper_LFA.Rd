@@ -37,6 +37,6 @@ please use loading2weights.
 }
 \examples{
   HES_age_small_sample <- HES_age_example \%>\% dplyr::group_by(eid) \%>\%
-dplyr::slice_sample(prop = 0.01)
+dplyr::slice_sample(prop = 0.05)
 inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
 }
