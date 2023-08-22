@@ -4,7 +4,13 @@
 \alias{wrapper_LFA}
 \title{Run LFA on diagnosis data.}
 \usage{
-wrapper_LFA(rec_data, topic_num, CVB_num = 5, save_data = F)
+wrapper_LFA(
+  rec_data,
+  topic_num,
+  CVB_num = 5,
+  save_data = F,
+  topic_weight_prior = NULL
+)
 }
 \arguments{
 \item{rec_data}{A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids, second column is the disease code;
@@ -16,6 +22,8 @@ within each individual, the rest will be ignored.}
 \item{CVB_num}{Number of runs with random initialization. The final output will be the run with highest ELBO value.}
 
 \item{save_data}{A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.}
+
+\item{topic_weight_prior}{prior of individual topic weights, default is set to be a vector of one (non-informative)}
 }
 \value{
 Return a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
