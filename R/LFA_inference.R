@@ -137,6 +137,7 @@ update_beta_lfa <- function(para){
 #' @param topic_num Number of topics to infer.
 #' @param CVB_num Number of runs with random initialization. The final output will be the run with highest ELBO value.
 #' @param save_data A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.
+#' @param topic_weight_prior prior of individual topic weights, default is set to be a vector of one (non-informative)
 #'
 #' @return Return a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
 #' patient_list (list of eid which correspond to rows of topic_weights), ds_list (gives the ordering of diseases in the topic_loadings object), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
@@ -146,7 +147,7 @@ update_beta_lfa <- function(para){
 #' @examples   HES_age_small_sample <- HES_age_example %>% dplyr::group_by(eid) %>%
 #' dplyr::slice_sample(prop = 0.01)
 #' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
-wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
+wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_weight_prior=NULL){
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%
     summarise(occ = n())
@@ -158,7 +159,16 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
     para <- topic_init_lfa_cvb(rec_data, ds_list, topic_num)
     # set the number of update
     para$max_itr <- 2000
-    para$alpha <- rep(1, para$K)
+    if(is.null(topic_weight_prior)){
+      para$alpha <- rep(1, para$K)
+    }else{
+      if(length(topic_weight_prior) != para$K){
+        print("pre-specified prior of topic weight must be a postive vector of length K (number of topics)")
+        para$alpha <- rep(1, para$K)
+      }else{
+        para$alpha <- topic_weight_prior
+      }
+    }
     para$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para))
     para$itr_beta <- 1
     para$itr_check_lb <- 5
