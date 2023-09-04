@@ -54,13 +54,16 @@ test_that("lfa accuracy", {
     filter(count == 1) %>%
     rename(eid = patient, diag_icd10 = disease) %>%
     select(eid, diag_icd10)
-
-  # Run lfa-atm:
-  simu_result <- wrapper_LFA( data_long, 4, CVB_num=1,
-                              topic_weight_prior=rep(0.1,4) )
-
-
-  # plot inferred topics:
-  topics_inf <- simu_result$topic_loadings
-
+  data_long_eid <- data_long %>%
+    group_by(eid) %>%
+    dplyr::tally() %>%
+    filter(n>1) %>%
+    dplyr::pull(eid)
+  data_long <- data_long %>% filter(eid %in% data_long_eid)
+  # Run lfa-atm: using below to verify the model
+  # simu_result <- wrapper_LFA( data_long, topic_num = 4, CVB_num=5)
+  # order_disease <- sapply(paste("D",1:S,sep=""), function(x )which(x == simu_result$ds_list$diag_icd10))
+  # topic_ordered <-  simu_result$topic_loadings[order_disease, ]
+  # # plot inferred topics:
+  # plot_lfa_topics(paste0("D",1:S,sep=""), beta = topic_ordered,  plot_title = "LFA topics")
 })

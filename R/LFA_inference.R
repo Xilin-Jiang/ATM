@@ -124,6 +124,22 @@ update_beta_lfa <- function(para){
   return(para)
 }
 
+# put a beta prior (shared for each bernouli probability)
+update_beta_lfa_with_prior <- function(para){
+  # create a unlist_zn that are non-zero at only the diseases position to facilitate computation
+  unlist_zn_disease <- para$unlist_zn * para$unlist_Ds_id$disease
+  # compute M-step for beta: basic case, direct maximize the upper bound
+  beta_nemerator <- sapply(1:para$D, function(j) colSums(unlist_zn_disease[para$ds_list[[j]]$id,]) ) %>% t + (para$beta_prior_a - 1)
+  para$beta <- sapply(1:para$D, function(j) colSums(para$unlist_zn[para$ds_list[[j]]$id,]) ) %>% t + + (para$beta_prior_a + para$beta_prior_b - 2)
+  # normalize beta
+  para$beta <- beta_nemerator/para$beta
+  # this beta_w parameter save the beta for each word: it is a list of M elements and each contain a K*Ns matrix
+  para$beta_w_full <- para$beta[para$unlist_Ds_id$Ds_id,,drop=FALSE] * para$unlist_Ds_id$disease + (1-para$beta[para$unlist_Ds_id$Ds_id,,drop=FALSE]) * (1-para$unlist_Ds_id$disease)
+
+  para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
+  return(para)
+}
+
 
 #' Run LFA on diagnosis data.
 #'
@@ -157,6 +173,11 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_w
   for(cvb_rep in 1:CVB_num){
     print(paste0("CVB inference number: ", cvb_rep))
     para <- topic_init_lfa_cvb(rec_data, ds_list, topic_num)
+
+    # set the beta priors
+    para$beta_prior_a <- 1 # set it to be 1 to avoid numeric error
+    para$beta_prior_b <- ( (para$D * para$M)/sum(para$unlist_Ds_id$disease) - 1) * para$beta_prior_a
+
     # set the number of update
     para$max_itr <- 2000
     if(is.null(topic_weight_prior)){
@@ -181,6 +202,7 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_w
         # para <- comp_E_lntheta(para)
       }
       para <- update_beta_lfa(para)
+      # para <- update_beta_lfa_with_prior(para) # use prior for beta updates
       # para <- update_alpha(para) # we use non-informative alpha
       para$lb[nrow(para$lb) + 1,] <- c(itr, CVB_lb_lfa(para))
       if(itr %% para$itr_check_lb  ==0){
