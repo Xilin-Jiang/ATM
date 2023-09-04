@@ -177,7 +177,7 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_w
     for(itr in 1:para$max_itr){
       print(paste0("Interation: ",itr))
       for(itr_inside in 1:para$itr_beta){ # in practice we perform quick steps a few times before move on.
-        para <- CVB0_E_zn(para) # we choose CVB0 as papers shown it could converge quicker
+        para <- CVB_E_zn(para) # we choose CVB with second order approximation
         # para <- comp_E_lntheta(para)
       }
       para <- update_beta_lfa(para)
