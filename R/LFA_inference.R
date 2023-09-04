@@ -153,6 +153,7 @@ update_beta_lfa_with_prior <- function(para){
 #' @param topic_num Number of topics to infer.
 #' @param CVB_num Number of runs with random initialization. The final output will be the run with highest ELBO value.
 #' @param save_data A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.
+#' @param beta_prior_flag A flag if true, will use a beta prior on the topic loading. Default is set to be FALSE.
 #' @param topic_weight_prior prior of individual topic weights, default is set to be a vector of one (non-informative)
 #'
 #' @return Return a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
@@ -163,7 +164,7 @@ update_beta_lfa_with_prior <- function(para){
 #' @examples   HES_age_small_sample <- HES_age_example %>% dplyr::group_by(eid) %>%
 #' dplyr::slice_sample(prop = 0.05)
 #' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
-wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_weight_prior=NULL){
+wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, beta_prior_flag = F, topic_weight_prior=NULL){
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%
     summarise(occ = n())
@@ -201,8 +202,11 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, topic_w
         para <- CVB_E_zn(para) # we choose CVB with second order approximation
         # para <- comp_E_lntheta(para)
       }
-      para <- update_beta_lfa(para)
-      # para <- update_beta_lfa_with_prior(para) # use prior for beta updates
+      if(beta_prior_flag){
+        para <- update_beta_lfa_with_prior(para) # use prior for beta updates
+      }else{
+        para <- update_beta_lfa(para)
+      }
       # para <- update_alpha(para) # we use non-informative alpha
       para$lb[nrow(para$lb) + 1,] <- c(itr, CVB_lb_lfa(para))
       if(itr %% para$itr_check_lb  ==0){

@@ -9,6 +9,7 @@ wrapper_LFA(
   topic_num,
   CVB_num = 5,
   save_data = F,
+  beta_prior_flag = F,
   topic_weight_prior = NULL
 )
 }
@@ -22,6 +23,8 @@ within each individual, the rest will be ignored.}
 \item{CVB_num}{Number of runs with random initialization. The final output will be the run with highest ELBO value.}
 
 \item{save_data}{A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.}
+
+\item{beta_prior_flag}{A flag if true, will use a beta prior on the topic loading. Default is set to be FALSE.}
 
 \item{topic_weight_prior}{prior of individual topic weights, default is set to be a vector of one (non-informative)}
 }
