@@ -130,7 +130,7 @@ update_beta_lfa_with_prior <- function(para){
   unlist_zn_disease <- para$unlist_zn * para$unlist_Ds_id$disease
   # compute M-step for beta: basic case, direct maximize the upper bound
   beta_nemerator <- sapply(1:para$D, function(j) colSums(unlist_zn_disease[para$ds_list[[j]]$id,]) ) %>% t + (para$beta_prior_a - 1)
-  para$beta <- sapply(1:para$D, function(j) colSums(para$unlist_zn[para$ds_list[[j]]$id,]) ) %>% t + + (para$beta_prior_a + para$beta_prior_b - 2)
+  para$beta <- sapply(1:para$D, function(j) colSums(para$unlist_zn[para$ds_list[[j]]$id,]) ) %>% t + (para$beta_prior_a + para$beta_prior_b - 2)
   # normalize beta
   para$beta <- beta_nemerator/para$beta
   # this beta_w parameter save the beta for each word: it is a list of M elements and each contain a K*Ns matrix
@@ -195,7 +195,7 @@ wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, beta_pr
     para$itr_beta <- 1
     para$itr_check_lb <- 5
     para$itr_save <- para$max_itr + 1 # don't need to save intermediate data
-    para$tol <- 10^(-6)
+    para$tol <- 10^(-7)
     for(itr in 1:para$max_itr){
       print(paste0("Interation: ",itr))
       for(itr_inside in 1:para$itr_beta){ # in practice we perform quick steps a few times before move on.

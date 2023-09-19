@@ -62,9 +62,10 @@ test_that("lfa accuracy", {
   # data_long <- data_long %>% filter(eid %in% data_long_eid)
 
   # Run lfa-atm: using below to verify the model
-  # simu_result <- wrapper_LFA( data_long, topic_num = 4, CVB_num=5, beta_prior_flag = F)
-  # order_disease <- sapply(paste("D",1:S,sep=""), function(x )which(x == simu_result$ds_list$diag_icd10))
-  # topic_ordered <-  simu_result$topic_loadings[order_disease, ]
-  # # plot inferred topics:
-  # plot_lfa_topics(paste0("D",1:S,sep=""), beta = topic_ordered,  plot_title = "LFA topics")
+  simu_result <- wrapper_LFA( data_long, topic_num = 4, CVB_num=5, beta_prior_flag = F)
+  simu_result_beta_prior <- wrapper_LFA( data_long, topic_num = 4, CVB_num=5, beta_prior_flag = T)
+  order_disease <- sapply(paste("D",1:S,sep=""), function(x )which(x == simu_result$ds_list$diag_icd10))
+  topic_ordered <-  simu_result$topic_loadings[order_disease, ]
+  # plot inferred topics:
+  plot_lfa_topics(paste0("D",1:S,sep=""), beta = topic_ordered,  plot_title = "LFA topics")
 })

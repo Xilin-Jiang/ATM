@@ -8,7 +8,7 @@ Description: We propose an age-dependent topic modelling (ATM) model, providing 
 License: `use_mit_license()`
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 Depends: 
     R (>= 2.10)
 LazyData: true
