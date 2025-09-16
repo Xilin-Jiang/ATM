@@ -479,159 +479,159 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
 }
 
 # now work on using LASSO for prediction
-LASSO_predict <- function(rec_data, para){
-  all_eid <- rec_data %>%
-    group_by(eid) %>%
-    summarise()
-  training_eid <- data.frame(eid = para$eid)
-  training_data <- training_eid %>%
-    left_join(rec_data, by = "eid")
-
-  testing_eid <- all_eid %>%
-    anti_join(training_eid, by = "eid")
-
-  testing_data <- testing_eid %>%
-    left_join(rec_data, by = "eid") %>%
-    group_by(eid) %>%
-    arrange(age_diag, .by_group = TRUE)
-
-  AUC_per_ds <- matrix(nrow = para$D, ncol = 1)
-  coefficients <- list()
-  for(j in 1:para$D){
-    ds_id <- para$list_above500occu$diag_icd10[j]
-    #####################
-    # create training data
-    #####################
-    cases_training_eid <- training_data %>% # select all the cases
-      filter(diag_icd10 == ds_id) %>%
-      rename(target_age = age_diag) %>%
-      select(-diag_icd10)
-    training_cases_data <- cases_training_eid %>% # select all disease that has a diagnosis that are earlier than target!
-      left_join(training_data, by = "eid") %>%
-      filter(age_diag < target_age)
-
-    training_targe_age_distribution <- training_cases_data %>%
-      group_by(eid) %>%
-      dplyr::slice(1)
-
-    training_control_eid <- training_data %>%
-      anti_join(cases_training_eid, by = "eid") %>%
-      group_by(eid) %>%
-      dplyr::slice(1) %>%
-      select(eid)
-
-    training_control_eid$target_age <- sample(training_targe_age_distribution$target_age, dim(training_control_eid)[1], replace = T)
-    training_control_data <- training_control_eid %>% # select all disease that has a diagnosis that are earlier than target!
-      left_join(training_data, by = "eid") %>%
-      filter(age_diag < target_age)
-
-    training_set <- bind_rows(training_cases_data, training_control_data)
-    training_cases_eid <- training_cases_data %>%
-      group_by(eid) %>%
-      dplyr::slice_tail(n = 1) %>%
-      mutate(outcome = 1) %>%
-      select(eid, outcome, age_diag)
-    training_control_eid <- training_control_data %>%
-      group_by(eid) %>%
-      dplyr::slice_tail(n = 1) %>%
-      mutate(outcome = 0) %>%
-      select(eid, outcome, age_diag)
-    training_eid <- bind_rows(training_cases_eid, training_control_eid)
-
-    #####################
-    # create testing data
-    #####################
-    testing_cases_eid <- testing_data %>%
-      filter(diag_icd10 == ds_id) %>%
-      rename(target_age = age_diag) %>%
-      select(-diag_icd10)
-
-    # exclude cases that have no prior diagnosis
-    # (i.e. target disease happen to be the first one; no way to predict!)
-    testing_control_eid <- testing_data %>%
-      anti_join(testing_cases_eid, by = "eid") %>%
-      group_by(eid) %>%
-      dplyr::slice(1) %>%
-      select(eid)
-
-    testing_cases_data <- testing_cases_eid %>% # select all disease that has a diagnosis that are earlier than target!
-      left_join(testing_data, by = "eid") %>%
-      filter(age_diag < target_age)
-
-    targe_age_distribution <- testing_cases_data %>%
-      group_by(eid) %>%
-      dplyr::slice(1)
-
-    testing_control_eid$target_age <- sample(targe_age_distribution$target_age, dim(testing_control_eid)[1], replace = T)
-
-    testing_control_data <- testing_control_eid %>% # select all disease that has a diagnosis that are earlier than target!
-      left_join(testing_data, by = "eid") %>%
-      filter(age_diag < target_age)
-
-    testing_set <- bind_rows(testing_cases_data, testing_control_data)
-    # save the case and control outcomes; save the age of the last event before target for computing area
-    testing_cases_eid <- testing_cases_data %>%
-      group_by(eid) %>%
-      dplyr::slice_tail(n = 1) %>%
-      mutate(outcome = 1) %>%
-      select(eid, outcome, age_diag)
-    testing_control_eid <- testing_control_data %>%
-      group_by(eid) %>%
-      dplyr::slice_tail(n = 1) %>%
-      mutate(outcome = 0) %>%
-      select(eid, outcome, age_diag)
-    testing_eid <- bind_rows(testing_cases_eid, testing_control_eid)
-
-    #########################################
-    # join and spread the data for glmnet
-    #########################################
-
-    # we want to join data together to make sure columns are aligned
-    spread_data <- bind_rows(training_set, testing_set) %>%
-      mutate(age_diag = 1) %>%
-      select(-target_age) %>%
-      dplyr::spread(key = diag_icd10, value = age_diag, fill = 0)
-    # mutate(across(2:para$D, scale)) # normalise each column
-
-    training_spread <- training_eid %>%
-      left_join(spread_data, by = "eid")
-    training_spread$age_diag <- scale(training_spread$age_diag)
-
-    testing_spread <- testing_eid %>%
-      left_join(spread_data, by = "eid")
-    testing_spread$age_diag <- scale(testing_spread$age_diag)
-
-    x_train <- as.matrix(training_spread[,3:dim(training_spread)[2]])
-    y_train <- training_spread$outcome
-
-    x_test <- as.matrix(testing_spread[,3:dim(testing_spread)[2]])
-    y_test <- testing_spread$outcome
-
-    num_itr <- floor(dim(x_train)[2] / 50)
-    # create a data file to save controls
-    scores <- matrix(nrow = dim(x_test)[1], ncol = num_itr + 1)
-    coefs <- list()
-    for(itr in 1:(num_itr+1)){
-      print(paste0("Disease ", ds_id, " Itr ", itr))
-      if(itr == (num_itr+1)){
-        if(dim(x_train)[2] == 50 * num_itr) break
-        x <- x_train[,(1 + 50*num_itr):ncol(x_train)]
-        predict_x <- x_test[,(1 + 50*num_itr):ncol(x_train)]
-      }else{
-        x <- x_train[,(1+50*(itr-1)):(50*itr)]
-        predict_x <- x_test[,(1+50*(itr-1)):(50*itr)]
-      }
-
-      cvfit_testing <- cv.glmnet(x, y_train, alpha = 1, family = "binomial")
-      coefs[[itr]] <- as.matrix(coef(cvfit_testing, s = cvfit_testing$lambda.min)[2:(dim(x)[2]+1)])
-      row.names(coefs[[itr]]) <- row.names(coef(cvfit_testing, s = cvfit_testing$lambda.min))[2:(dim(x)[2]+1)]
-      scores[,itr] <- stats::predict(cvfit_testing, newx = predict_x, s = "lambda.min")
-    }
-    AUC_per_ds[j,1] <- pROC::auc(y_test, rowSums(scores))
-    coefficients[[j]] <- do.call(rbind, coefs)
-  }
-  return(list(AUC_per_ds, coefficients))
-}
+# LASSO_predict <- function(rec_data, para){
+#   all_eid <- rec_data %>%
+#     group_by(eid) %>%
+#     summarise()
+#   training_eid <- data.frame(eid = para$eid)
+#   training_data <- training_eid %>%
+#     left_join(rec_data, by = "eid")
+#
+#   testing_eid <- all_eid %>%
+#     anti_join(training_eid, by = "eid")
+#
+#   testing_data <- testing_eid %>%
+#     left_join(rec_data, by = "eid") %>%
+#     group_by(eid) %>%
+#     arrange(age_diag, .by_group = TRUE)
+#
+#   AUC_per_ds <- matrix(nrow = para$D, ncol = 1)
+#   coefficients <- list()
+#   for(j in 1:para$D){
+#     ds_id <- para$list_above500occu$diag_icd10[j]
+#     #####################
+#     # create training data
+#     #####################
+#     cases_training_eid <- training_data %>% # select all the cases
+#       filter(diag_icd10 == ds_id) %>%
+#       rename(target_age = age_diag) %>%
+#       select(-diag_icd10)
+#     training_cases_data <- cases_training_eid %>% # select all disease that has a diagnosis that are earlier than target!
+#       left_join(training_data, by = "eid") %>%
+#       filter(age_diag < target_age)
+#
+#     training_targe_age_distribution <- training_cases_data %>%
+#       group_by(eid) %>%
+#       dplyr::slice(1)
+#
+#     training_control_eid <- training_data %>%
+#       anti_join(cases_training_eid, by = "eid") %>%
+#       group_by(eid) %>%
+#       dplyr::slice(1) %>%
+#       select(eid)
+#
+#     training_control_eid$target_age <- sample(training_targe_age_distribution$target_age, dim(training_control_eid)[1], replace = T)
+#     training_control_data <- training_control_eid %>% # select all disease that has a diagnosis that are earlier than target!
+#       left_join(training_data, by = "eid") %>%
+#       filter(age_diag < target_age)
+#
+#     training_set <- bind_rows(training_cases_data, training_control_data)
+#     training_cases_eid <- training_cases_data %>%
+#       group_by(eid) %>%
+#       dplyr::slice_tail(n = 1) %>%
+#       mutate(outcome = 1) %>%
+#       select(eid, outcome, age_diag)
+#     training_control_eid <- training_control_data %>%
+#       group_by(eid) %>%
+#       dplyr::slice_tail(n = 1) %>%
+#       mutate(outcome = 0) %>%
+#       select(eid, outcome, age_diag)
+#     training_eid <- bind_rows(training_cases_eid, training_control_eid)
+#
+#     #####################
+#     # create testing data
+#     #####################
+#     testing_cases_eid <- testing_data %>%
+#       filter(diag_icd10 == ds_id) %>%
+#       rename(target_age = age_diag) %>%
+#       select(-diag_icd10)
+#
+#     # exclude cases that have no prior diagnosis
+#     # (i.e. target disease happen to be the first one; no way to predict!)
+#     testing_control_eid <- testing_data %>%
+#       anti_join(testing_cases_eid, by = "eid") %>%
+#       group_by(eid) %>%
+#       dplyr::slice(1) %>%
+#       select(eid)
+#
+#     testing_cases_data <- testing_cases_eid %>% # select all disease that has a diagnosis that are earlier than target!
+#       left_join(testing_data, by = "eid") %>%
+#       filter(age_diag < target_age)
+#
+#     targe_age_distribution <- testing_cases_data %>%
+#       group_by(eid) %>%
+#       dplyr::slice(1)
+#
+#     testing_control_eid$target_age <- sample(targe_age_distribution$target_age, dim(testing_control_eid)[1], replace = T)
+#
+#     testing_control_data <- testing_control_eid %>% # select all disease that has a diagnosis that are earlier than target!
+#       left_join(testing_data, by = "eid") %>%
+#       filter(age_diag < target_age)
+#
+#     testing_set <- bind_rows(testing_cases_data, testing_control_data)
+#     # save the case and control outcomes; save the age of the last event before target for computing area
+#     testing_cases_eid <- testing_cases_data %>%
+#       group_by(eid) %>%
+#       dplyr::slice_tail(n = 1) %>%
+#       mutate(outcome = 1) %>%
+#       select(eid, outcome, age_diag)
+#     testing_control_eid <- testing_control_data %>%
+#       group_by(eid) %>%
+#       dplyr::slice_tail(n = 1) %>%
+#       mutate(outcome = 0) %>%
+#       select(eid, outcome, age_diag)
+#     testing_eid <- bind_rows(testing_cases_eid, testing_control_eid)
+#
+#     #########################################
+#     # join and spread the data for glmnet
+#     #########################################
+#
+#     # we want to join data together to make sure columns are aligned
+#     spread_data <- bind_rows(training_set, testing_set) %>%
+#       mutate(age_diag = 1) %>%
+#       select(-target_age) %>%
+#       tidyr::pivot_wider(names_from = diag_icd10, values_from = age_diag, values_fill = 0)
+#     # mutate(across(2:para$D, scale)) # normalise each column
+#
+#     training_spread <- training_eid %>%
+#       left_join(spread_data, by = "eid")
+#     training_spread$age_diag <- scale(training_spread$age_diag)
+#
+#     testing_spread <- testing_eid %>%
+#       left_join(spread_data, by = "eid")
+#     testing_spread$age_diag <- scale(testing_spread$age_diag)
+#
+#     x_train <- as.matrix(training_spread[,3:dim(training_spread)[2]])
+#     y_train <- training_spread$outcome
+#
+#     x_test <- as.matrix(testing_spread[,3:dim(testing_spread)[2]])
+#     y_test <- testing_spread$outcome
+#
+#     num_itr <- floor(dim(x_train)[2] / 50)
+#     # create a data file to save controls
+#     scores <- matrix(nrow = dim(x_test)[1], ncol = num_itr + 1)
+#     coefs <- list()
+#     for(itr in 1:(num_itr+1)){
+#       print(paste0("Disease ", ds_id, " Itr ", itr))
+#       if(itr == (num_itr+1)){
+#         if(dim(x_train)[2] == 50 * num_itr) break
+#         x <- x_train[,(1 + 50*num_itr):ncol(x_train)]
+#         predict_x <- x_test[,(1 + 50*num_itr):ncol(x_train)]
+#       }else{
+#         x <- x_train[,(1+50*(itr-1)):(50*itr)]
+#         predict_x <- x_test[,(1+50*(itr-1)):(50*itr)]
+#       }
+#
+#       cvfit_testing <- cv.glmnet(x, y_train, alpha = 1, family = "binomial")
+#       coefs[[itr]] <- as.matrix(coef(cvfit_testing, s = cvfit_testing$lambda.min)[2:(dim(x)[2]+1)])
+#       row.names(coefs[[itr]]) <- row.names(coef(cvfit_testing, s = cvfit_testing$lambda.min))[2:(dim(x)[2]+1)]
+#       scores[,itr] <- stats::predict(cvfit_testing, newx = predict_x, s = "lambda.min")
+#     }
+#     AUC_per_ds[j,1] <- pROC::auc(y_test, rowSums(scores))
+#     coefficients[[j]] <- do.call(rbind, coefs)
+#   }
+#   return(list(AUC_per_ds, coefficients))
+# }
 
 # using function below to create an easy to use topic loadings to compute prediction accuracy in a test set
 #' Title Compute prediction odds ratio for a testing data set using pre-training ATM topic loading. Note only diseases listed in the ds_list will be used.

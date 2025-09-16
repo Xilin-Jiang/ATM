@@ -1,13 +1,20 @@
 ## ATM
 
-Age-dependent topic modelling (ATM) is a method for inferring comorbidity profiles for individuals at Biobank Scale. Details of the Method is available in the paper [Age-dependent topic modelling of comorbidities in UK Biobank identifies disease subtypes with differential genetic risk](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2).
+Age-dependent topic modelling (ATM) is a method for inferring comorbidity profiles for individuals at Biobank Scale. Details of the Method is available in the paper [Age-dependent topic modelling of comorbidities in UK Biobank identifies disease subtypes with differential genetic risk](https://doi.org/10.1038/s41588-023-01522-8).
 
 ATM assigns to each individual topic weights for several disease topics; each disease topic reflects a set of diseases that tend to co-occur as a function of age, quantified by age-dependent *topic loadings* for each disease. The model assumes that for each disease diagnosis, a topic is sampled based on the individual’s *topic weights* (which sum to 1 across topics, for a given individual), and a disease is sampled based on the individual’s age and the age-dependent *topic loadings* (which sum to 1 across diseases, for a given topic at a given age). The model generalises the latent dirichlet allocation (LDA) model by allowing topic loadings for each topic to vary with age. 
-![My Image](ATM_schematic.png)
+![My Image](man/figures/ATM_schematic.png)
 
 For bug reports, please email: <xilinjiang@hsph.harvard.edu>. 
 
 Note: ATM is designed for identifying disease subtypes and infer comorbidity trajectories, but not for performing GWAS (due to the likelihood structure). For GWAS we recommend using LFA, see [GWAS using Latent Feature Allocation (LFA)](#gwas-using-latent-feature-allocation-lfa). 
+
+## Update log
+
+September 15th, 2025: ATM now can be run when age information is not available. In that case ATM is reduced to the LDA model. 
+As the LDA model are implemented using collapsed variational inference, it theoretically are more accurate than most implementation that uses mean field variational inference. 
+
+Imputing for missing age (`age_imputation`) is also available -- users can use the imputation procedure when they have missing age information. 
 
 ## Installation
 
@@ -27,18 +34,20 @@ Note for each individual, we only keep the first onset of each diseases. Therefo
 ```r
 library(ATM)
 # head(HES_age_example)
-ATM <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
+ATM_results <- wrapper_ATM(HES_age_example, 10, CVB_num = 1)
+
+# individual comorbidity weights
+subtypes_atm <- data.frame(individual_id = ATM_results$patient_list, topic_weights = ATM_results$topic_weights)
+
+# visualise topic loadings
+topic_id <- 1 # topic id
+plot_age_topics(disease_names = ATM_results$ds_list$diag_icd10,
+        trajs = ATM_results$topic_loadings[30:80,,topic_id])
 ```
+The key output from the data is the comorbidity weights ("topic weights"). Using above code `subtypes_atm` will be 
+the patient-level comorbidity weights that summarise comorbidity information of each individual.
 
-If the goal is obtaining the  *topic weights* for a group of individuals to learn about their comorbidity profile, there is no need to infer the comorbidity *topic loadings*. Following code below to map the example diagnosis history (example data `HES_age_example`) to the optimal disease topics inferred from UK Biobank HES data. Details are in [Inferring comorbidity profiles for individuals](#inferring-comorbidity-profiles-for-individuals) section.
-
-```r
-new_weights <- loading2weights(HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
-```
-
-`UKB_HES_10topics` is an internal dataset containing topic loadings inferred from 349 diseases in the UK Biobank HES data. You could substitute it to disease topics inferred from other populations, with the same data format (a tensor of shape $age \times disease number \times topic number$). The output will be the topic weights of each individual in two formats: (1) `new_weights$topic_weights` representing the how much weight each individual have profile (sum to one across topics for each individual); (2) `new_weights$incidence_weight_sum` representing the cumulative weights across diseases (sum across topics equals the number of diagnosis for each individual). 
-
-To visualise the topic loadings, use `plot_age_topics` function. Details are provided in [Visualise the comorbidity topic loadings](#visualise-the-comorbidity-topic-loadings) section. 
+You can also visualise the comorbidity profiles (topic loadings), use `plot_age_topics` function. Details are provided in [Visualise the comorbidity topic loadings](#visualise-the-comorbidity-topic-loadings) section. 
 
 ```r
 disease_list <- UKB_349_disease %>% 
@@ -48,6 +57,29 @@ topic_id <- 1 # topic id
 plot_age_topics(disease_names = disease_list,
         trajs = UKB_HES_10topics[30:80,,topic_id])
 ```
+
+
+If the goal is obtaining the *topic weights* for a group of individuals to learn about their comorbidity profile, there is no need to infer the comorbidity *topic loadings*. Following code below to map the example diagnosis history (example data `HES_age_example`) to the optimal disease topics inferred from UK Biobank HES data. Details are in [Inferring comorbidity profiles for individuals](#inferring-comorbidity-profiles-for-individuals) section.
+
+```r
+new_weights <- loading2weights(HES_age_example, ds_list = UKB_349_disease, topics = UKB_HES_10topics)
+```
+
+`UKB_HES_10topics` is an internal dataset containing topic loadings inferred from 349 diseases in the UK Biobank HES data. You could substitute it to disease topics inferred from other populations, with the same data format (a tensor of shape $age \times disease\_number \times topic\_number$). The output will be the topic weights of each individual in two formats: (1) `new_weights$topic_weights` representing the how much weight each individual have on the comorbidity topic (sum to one across topics for each individual); (2) `new_weights$incidence_weight_sum` representing the cumulative weights across diseases of this individuals (sum across topics equals the number of diagnosis for each individual). 
+
+If **some age information is missing**, you can use the `age_imputation` to impute the age then run with ATM_wrapper:
+
+```r
+library(ATM)
+# head(HES_age_example)
+rec_data_missing_age <- HES_age_example
+rec_data_missing_age$age_diag[1:10000] <- NA
+rec_data_imputed <- age_imputation(rec_data_missing_age, method= "mean")
+cor(rec_data_imputed$age_diag[1:10000], HES_age_example$age_diag[1:10000])
+ATM_results <- wrapper_ATM(rec_data_imputed, 10, CVB_num = 1)
+```
+
+
 
 ## Internal data example
 
@@ -127,6 +159,13 @@ plot_age_topics(disease_names = disease_list,
         top_ds = 7)
 ```
 
+If there are **no age information**, ATM will degrade to LDA, please use this visualisation instead.
+```r
+no_age_example <- HES_age_example %>% mutate(age_diag=99)
+ATM_results <- wrapper_ATM(no_age_example, 10, CVB_num = 1)
+plt <- plot_lfa_topics(ATM_results$ds_list$diag_icd10, beta = ATM_results$topic_loadings,  plot_title = "LDA topics")
+plt
+```
 ## Analysing comorbidity subtype of diseases
 We reported in the [ATM paper](https://www.medrxiv.org/content/10.1101/2022.10.23.22281420v2) that patients of the same diseases that have different comorbidities has distinct genetic profiles, even after accounting for the genetic backgrounds of these comorbidities (i.e. after correcting for collider effects). We define these as comorbidity subtypes based on *topic weight*.  *topic weight* could be extracted from either from the output of `wrapper_ATM` function (see [Inferring disease topics using diagnosis data](#inferring-disease-topics-using-diagnosis-data) section) or the output of `loading2weights` function (see [Inferring comorbidity profiles for individuals](#inferring-comorbidity-profiles-for-individuals) section). For example, for analysing comorbidity subtypes from the `wrapper_ATM` outputs, users could extract the *topic weights* which is a $\mathcal{R}^{M \times K}$ matrix. The columns are ordered as the *topic loadings*, while the rows are ordered as the `ATM_results$patient_list`.  
 ```r
@@ -140,7 +179,7 @@ The `topic_weights` of the output of `loading2weights` function has the same for
 
 ## Generative process of ATM
 
-![My Image](ATM_generative_process.png)
+![My Image](man/figures/ATM_generative_process.png)
 
 We constructed a Bayesian hierarchical model to infer latent risk profiles for common diseases.  In summary, the model assumes there exist a few disease topics that underlie many common diseases.  Each topic is age-evolving and contain risk trajectories for all diseases considered. An individual's risk for each diseases is determined by the weights of all topics. The indices in this note are as follows:
 $$s= 1,...,M;$$
@@ -171,7 +210,7 @@ For GWAS on comorbidities, we recommend using Latent Feature Allocation (LFA) wh
 
 A comparison of LFA and ATM is as below. ATM only models disease records (left) while LFA could model both patient and healthy individual (right). We have found models including LFA that uses non-sparse coding of disease topics to be more powerful at identifying disease loci.  
 
-![My Image](ATM_LFA_comparison.png)
+![My Image](man/figures/ATM_LFA_comparison.png)
 
 LFA model could be run similarly as ATM. The input data should be format data as `HES_age_example`; first column is individual ID, second column is the disease code; while the third column (age-at-diagnosis) became optional as LFA does not model age. Below is an example inferring 10 topics using LFA. 
 

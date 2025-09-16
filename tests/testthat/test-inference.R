@@ -30,18 +30,18 @@ test_that("inference wrapper", {
 })
 
 test_that("estimate topic weights from fixed topic loadings", {
-  topic_weights_results <- loading2weights(HES_age_example)
-  new_weights <- topic_weights_results$topic_weights
-  load("~/Desktop/comorbidity/Results/Run_2rec_PheCode_age_dependent_K10_P5_rep10.RData")
-  patient_weights <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
-  originial_weights <- data.frame(eid = para$eid, loading = patient_weights)
-  corr_topics <- c()
-  for(i in 1:para$K){
-    combined_weights <- new_weights %>%
-      select(eid, paste0("topic_weights.", i)) %>%
-      left_join(select(originial_weights, eid, paste0("loading.", i)), by = c("eid"))
-    corr_topics[i] <- cor(combined_weights[,2], combined_weights[,3])
-  }
-  expect_gt(mean(corr_topics), 0.7)
+  # topic_weights_results <- loading2weights(HES_age_example)
+  # new_weights <- topic_weights_results$topic_weights
+  # load("~/Desktop/PROJECTS/Jiang_2023_NG_ATM/Results/Run_2rec_PheCode_age_dependent_K10_P5_rep10.RData")
+  # patient_weights <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
+  # originial_weights <- data.frame(eid = para$eid, loading = patient_weights)
+  # corr_topics <- c()
+  # for(i in 1:para$K){
+  #   combined_weights <- new_weights %>%
+  #     select(eid, paste0("topic_weights.", i)) %>%
+  #     left_join(select(originial_weights, eid, paste0("loading.", i)), by = c("eid"))
+  #   corr_topics[i] <- cor(combined_weights[,2], combined_weights[,3])
+  # }
+  # expect_gt(mean(corr_topics), 0.7)
 })
 

@@ -6,7 +6,7 @@
 \usage{
 wrapper_ATM(
   rec_data,
-  topic_num,
+  topic_num = 10,
   degree_free_num = 3,
   CVB_num = 5,
   save_data = F
@@ -15,9 +15,9 @@ wrapper_ATM(
 \arguments{
 \item{rec_data}{A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids, second column is the disease code;
 third column is the age at diagnosis. Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
-within each individual, the rest will be ignored.}
+within each individual, the rest will be ignored. If there is no age variation in the third column, LDA (no age information) will be run instead of ATM.}
 
-\item{topic_num}{Number of topics to infer.}
+\item{topic_num}{Number of topics to infer. Default is 10 but we highly recommend running multiple choices of this number.}
 
 \item{degree_free_num}{control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial, cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.}
 
@@ -26,7 +26,7 @@ within each individual, the rest will be ignored.}
 \item{save_data}{A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.}
 }
 \value{
-Reture a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
+Return a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
 patient_list (list of eid which correspond to rows of topic_weights), ds_list (gives the ordering of diseases in the topic_loadings object), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
 topic_configuration (control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial,
 cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.), multiple_run_ELBO_compare (ELBO of each runs).

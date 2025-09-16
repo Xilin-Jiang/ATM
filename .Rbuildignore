@@ -1,3 +1,5 @@
 ^ATM\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
+^LICENSE\.md$
+^legacy$

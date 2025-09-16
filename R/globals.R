@@ -1,0 +1,9 @@
+utils::globalVariables(c(
+  "eid","age_diag","diag_icd10","target_age","outcome",
+  "age_sub1","age_sub2","age_sub3","disease","Iteration","Lower_bound",
+  "UKB_349_disease","UKB_HES_10topics","Ds_id","Var1","Var2","value",
+  "rec_per_indv","SNOMED","ICD10","PheCode","parent_phecode","age",
+  "x_pos","y_pos","ds_label","inferred_topics","degree_free_num","occ",
+  "para","phecode","phecode_icd10","phecode_icd10cm","short_icd10",
+  "survive_age","survive_year","age_gap","id"
+))

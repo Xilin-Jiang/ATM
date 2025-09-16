@@ -165,3 +165,11 @@ SNOMED_ICD10CM <- SNOMED_ICD10CM %>%
   slice(1) %>%
   ungroup()
 usethis::use_data(SNOMED_ICD10CM, overwrite = TRUE)
+
+#########################
+# compress data
+
+usethis::use_data(HES_age_example, HES_icd10_example, SNOMED_ICD10CM,
+                  UKB_349_disease, UKB_HES_10topics, disease_info_phecode_icd10,
+                  phecode_icd10, phecode_icd10cm, short_icd10, short_icd10cm,
+                  overwrite = TRUE, compress = "xz", version = 3)

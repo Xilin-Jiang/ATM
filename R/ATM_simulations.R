@@ -59,7 +59,7 @@ simulate_basic_topic_data <- function(sample_sz, topic_number, disease_number, o
   # initiate beta
   para$eta <- rgamma(para$D,shape = 100, rate = 100)
   # each column is a topic; D*K matrix
-  para$beta <- t(rdirichlet(para$K, para$eta))
+  para$beta <- t(gtools::rdirichlet(para$K, para$eta))
   para$beta_w <- list()
   para$beta_w <- lapply(para$w, function(w) para$beta[w$Ds_id,,drop=FALSE] )
   para$beta_w_full <- do.call(rbind, para$beta_w)

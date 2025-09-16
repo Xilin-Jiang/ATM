@@ -416,90 +416,90 @@ lb_beta_zeta <- function(para){
 
 ### the slower methods, not useful for large dataset but still intuitive for analytical purpose
 # compute the newton method for roots
-fun_age_beta <- function(beta_ij,i_fn,j_fn, para){
-  para$phi_z[[j_fn]][,i_fn] %*% beta_ij -
-    z_zeta_exp_phi_beta(para$basis_phi, beta_ij, para$z_zeta[, i_fn]) -
-    1/200 * crossprod(beta_ij) # add a prior/regularisation, just using a standard normal to control the scale
-}
-grad_age_beta <- function(beta_ij,i_gd,j_gd, para){
-  para$phi_z[[j_gd]][,i_gd] -
-    phi_z_zeta_exp_phi_beta(x = para$basis_phi,beta = beta_ij, phi_z_zeta = para$phi_z_zeta[[i_gd]]) -
-    0.01 * beta_ij # add a prior/regularisation
-}
-
-update_age_depend_lda <- function(para){
-  # first compute a full matrix then split: this is complicated but is much more efficient than directly lapply of para$w
-  # compute M-step for beta: basic case, direct maximize the upper bound
-
-  # # If I update zeta between each j, the optimization will be slower....
-  # for(j in 1:para$D){
-  #   # first compute the whole age_beta_basis, for each topic it is T-by-D
-  #   para$exp_age_beta_basis <- array( sapply(1:para$K,
-  #                                            function(i) exp(para$age_basis %*% para$beta[,,i])),
-  #                                     dim=c(dim(para$age_basis)[1], para$D, para$K))
-  #   para$sum_exp_age_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), sum)
-  #   # compute the variational parameter zeta nsi
-  #   para$zeta_full <- para$sum_exp_age_beta_basis[para$unlist_Ds_id$age_diag,,drop=F]
-  #   para$zeta <- lapply(para$patient_lst, function(x) para$zeta_full[x,,drop=F]) # we actually only need zeta as a full list
-  #   para$z_zeta <- para$unlist_zn/para$zeta_full # this term helps speed up
-  #
-  #   para$beta[,j,] <- sapply(1:para$K, function(i)
-  #     optim(par = para$beta[,j,i],
-  #           fn = function(x) fun_age_beta(x,i,j, para),
-  #           gr = function(x) grad_age_beta(x,i,j, para), method ="BFGS",
-  #           control = list(fnscale = -1) )$par )
-  # }
-  para$zeta_full <- para$sum_exp_age_beta_basis[para$unlist_Ds_id$age_diag,,drop=F]
-  # para$zeta <- lapply(para$patient_lst, function(x) para$zeta_full[x,,drop=F]) # we actually only need zeta as a full list
-  para$z_zeta <- para$unlist_zn/para$zeta_full # this term helps speed up
-  para$phi_z_zeta <- lapply(1:para$K, function(i) para$basis_phi*para$z_zeta[,i]) # help to speed up
-  para$phi_z <- lapply(1:para$D, function(j)
-    crossprod(para$basis_phi[para$ds_list[[j]]$id, ,drop = F], para$unlist_zn[para$ds_list[[j]]$id, ]) )  # speed up
-
-  # para$beta <- array(sapply(1:para$K, function(i) sapply(1:para$D, function(j)
-  #   optim(par = para$beta[,j,i],
-  #         fn = function(x) fun_age_beta(x,i,j, para),
-  #         gr = function(x) grad_age_beta(x,i,j, para), method ="BFGS",
-  #         control = list(fnscale = -1) )$par )),
-  #   dim = c(para$P, para$D, para$K))
-  #############################################################
-  # # using following piece to avoid memory blowing up
-  #############################################################
-  for(j in 1:para$D){
-    # print(paste0("update beta: ", j))
-    for(i in 1:para$K){
-      fail_init <- (sum(!is.finite(c(fun_age_beta(para$beta[,j,i],i,j, para), grad_age_beta(para$beta[,j,i],i,j, para)) ) ) != 0)
-      if(fail_init){ # handle the initialization case when gradient are numerically infeasible
-        print("Warning: Handle infeasible initialization, should only be occuring at first few interations.")
-        para$beta <-  array(rnorm(para$P * para$D * para$K,sd =0.1), dim = c(para$P, para$D, para$K))
-        para$E_lntheta <- t(sapply(rgamma(para$M,shape = 100, rate = 100), function(x) x*(digamma(para$alpha) - digamma(sum(para$alpha))) ))
-        break
-      }
-      para$beta[,j,i] <- optim(par = para$beta[,j,i],
-                               fn = function(x) fun_age_beta(x,i,j, para),
-                               gr = function(x) grad_age_beta(x,i,j, para), method ="BFGS",
-                               control = list(fnscale = -1) )$par
-    }
-    if(fail_init){break} # break from the iner circle as well
-  }
-
-  # compute the beta_w: exponential divided by sum
-  # first compute the whole age_beta_basis, for each topic it is T-by-D
-  para$exp_age_beta_basis <- array( sapply(1:para$K,
-                                           function(i) exp(para$age_basis %*% para$beta[,,i])),
-                                    dim=c(dim(para$age_basis)[1], para$D, para$K))
-  para$sum_exp_age_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), sum)
-  # this is the basis of softmax function
-  para$pi_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), function(x) x/sum(x)) %>%
-    aperm(perm = c(2,1,3))
-
-  # update beta_w: list of Ns-by-K
-  para$beta_w_full <- apply(para$pi_beta_basis, 3, function(x)
-    x[as.matrix(select(para$unlist_Ds_id, age_diag, Ds_id))])
-  para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
-
-  return(para)
-}
+# fun_age_beta <- function(beta_ij,i_fn,j_fn, para){
+#   para$phi_z[[j_fn]][,i_fn] %*% beta_ij -
+#     z_zeta_exp_phi_beta(para$basis_phi, beta_ij, para$z_zeta[, i_fn]) -
+#     1/200 * crossprod(beta_ij) # add a prior/regularisation, just using a standard normal to control the scale
+# }
+# grad_age_beta <- function(beta_ij,i_gd,j_gd, para){
+#   para$phi_z[[j_gd]][,i_gd] -
+#     phi_z_zeta_exp_phi_beta(x = para$basis_phi,beta = beta_ij, phi_z_zeta = para$phi_z_zeta[[i_gd]]) -
+#     0.01 * beta_ij # add a prior/regularisation
+# }
+#
+# update_age_depend_lda <- function(para){
+#   # first compute a full matrix then split: this is complicated but is much more efficient than directly lapply of para$w
+#   # compute M-step for beta: basic case, direct maximize the upper bound
+#
+#   # # If I update zeta between each j, the optimization will be slower....
+#   # for(j in 1:para$D){
+#   #   # first compute the whole age_beta_basis, for each topic it is T-by-D
+#   #   para$exp_age_beta_basis <- array( sapply(1:para$K,
+#   #                                            function(i) exp(para$age_basis %*% para$beta[,,i])),
+#   #                                     dim=c(dim(para$age_basis)[1], para$D, para$K))
+#   #   para$sum_exp_age_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), sum)
+#   #   # compute the variational parameter zeta nsi
+#   #   para$zeta_full <- para$sum_exp_age_beta_basis[para$unlist_Ds_id$age_diag,,drop=F]
+#   #   para$zeta <- lapply(para$patient_lst, function(x) para$zeta_full[x,,drop=F]) # we actually only need zeta as a full list
+#   #   para$z_zeta <- para$unlist_zn/para$zeta_full # this term helps speed up
+#   #
+#   #   para$beta[,j,] <- sapply(1:para$K, function(i)
+#   #     optim(par = para$beta[,j,i],
+#   #           fn = function(x) fun_age_beta(x,i,j, para),
+#   #           gr = function(x) grad_age_beta(x,i,j, para), method ="BFGS",
+#   #           control = list(fnscale = -1) )$par )
+#   # }
+#   para$zeta_full <- para$sum_exp_age_beta_basis[para$unlist_Ds_id$age_diag,,drop=F]
+#   # para$zeta <- lapply(para$patient_lst, function(x) para$zeta_full[x,,drop=F]) # we actually only need zeta as a full list
+#   para$z_zeta <- para$unlist_zn/para$zeta_full # this term helps speed up
+#   para$phi_z_zeta <- lapply(1:para$K, function(i) para$basis_phi*para$z_zeta[,i]) # help to speed up
+#   para$phi_z <- lapply(1:para$D, function(j)
+#     crossprod(para$basis_phi[para$ds_list[[j]]$id, ,drop = F], para$unlist_zn[para$ds_list[[j]]$id, ]) )  # speed up
+#
+#   # para$beta <- array(sapply(1:para$K, function(i) sapply(1:para$D, function(j)
+#   #   optim(par = para$beta[,j,i],
+#   #         fn = function(x) fun_age_beta(x,i,j, para),
+#   #         gr = function(x) grad_age_beta(x,i,j, para), method ="BFGS",
+#   #         control = list(fnscale = -1) )$par )),
+#   #   dim = c(para$P, para$D, para$K))
+#   #############################################################
+#   # # using following piece to avoid memory blowing up
+#   #############################################################
+#   for(j in 1:para$D){
+#     # print(paste0("update beta: ", j))
+#     for(i in 1:para$K){
+#       fail_init <- (sum(!is.finite(c(fun_age_beta(para$beta[,j,i],i,j, para), grad_age_beta(para$beta[,j,i],i,j, para)) ) ) != 0)
+#       if(fail_init){ # handle the initialization case when gradient are numerically infeasible
+#         print("Warning: Handle infeasible initialization, should only be occuring at first few interations.")
+#         para$beta <-  array(rnorm(para$P * para$D * para$K,sd =0.1), dim = c(para$P, para$D, para$K))
+#         para$E_lntheta <- t(sapply(rgamma(para$M,shape = 100, rate = 100), function(x) x*(digamma(para$alpha) - digamma(sum(para$alpha))) ))
+#         break
+#       }
+#       para$beta[,j,i] <- optim(par = para$beta[,j,i],
+#                                fn = function(x) fun_age_beta(x,i,j, para),
+#                                gr = function(x) grad_age_beta(x,i,j, para), method ="BFGS",
+#                                control = list(fnscale = -1) )$par
+#     }
+#     if(fail_init){break} # break from the iner circle as well
+#   }
+#
+#   # compute the beta_w: exponential divided by sum
+#   # first compute the whole age_beta_basis, for each topic it is T-by-D
+#   para$exp_age_beta_basis <- array( sapply(1:para$K,
+#                                            function(i) exp(para$age_basis %*% para$beta[,,i])),
+#                                     dim=c(dim(para$age_basis)[1], para$D, para$K))
+#   para$sum_exp_age_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), sum)
+#   # this is the basis of softmax function
+#   para$pi_beta_basis <- apply(para$exp_age_beta_basis, c(1,3), function(x) x/sum(x)) %>%
+#     aperm(perm = c(2,1,3))
+#
+#   # update beta_w: list of Ns-by-K
+#   para$beta_w_full <- apply(para$pi_beta_basis, 3, function(x)
+#     x[as.matrix(select(para$unlist_Ds_id, age_diag, Ds_id))])
+#   para$beta_w <- lapply(para$patient_lst, function(x) para$beta_w_full[x,,drop=F])
+#
+#   return(para)
+# }
 
 # basic VB methods functions (not used, but implemented during implementation for comparison)
 comp_lda_lb <- function(para){
@@ -561,29 +561,29 @@ update_beta_basic_lda <- function(para){
   return(para)
 }
 
-update_alpha <- function(para){
-  # compute M-step for alpha; optimize the dirichlet with Newton-Raphson method
-  para$lb_alpha <- function(alpha){
-    para$M*(lgamma(sum(alpha)) - sum(lgamma(para$alpha)) ) +
-      sum(colSums(para$E_lntheta) * (para$alpha - 1) )
-  }
-
-  para$grad_alpha <- function(alpha){
-    para$M*(digamma(sum(alpha)) - digamma(para$alpha))  +
-      colSums( para$E_lntheta )
-  }
-
-  para$hess_alpha <- function(alpha){
-    para$M*( trigamma(sum(alpha)) - diag(trigamma(alpha)) )
-  }
-  # para$optim_alpha <- maxBFGS(para$lb_alpha, grad = para$grad_alpha, start = para$alpha,
-  #                             constraints=list(ineqA = diag(nrow = para$K), ineqB = matrix(0,nrow = para$K)) )
-  para$optim_alpha <- maxNR(para$lb_alpha, grad = para$grad_alpha, hess = para$hess_alpha, start = para$alpha) # rep(10^(-5), para$K))
-
-  para$alpha <- para$optim_alpha$estimate
-
-  return(para)
-}
+# update_alpha <- function(para){
+#   # compute M-step for alpha; optimize the dirichlet with Newton-Raphson method
+#   para$lb_alpha <- function(alpha){
+#     para$M*(lgamma(sum(alpha)) - sum(lgamma(para$alpha)) ) +
+#       sum(colSums(para$E_lntheta) * (para$alpha - 1) )
+#   }
+#
+#   para$grad_alpha <- function(alpha){
+#     para$M*(digamma(sum(alpha)) - digamma(para$alpha))  +
+#       colSums( para$E_lntheta )
+#   }
+#
+#   para$hess_alpha <- function(alpha){
+#     para$M*( trigamma(sum(alpha)) - diag(trigamma(alpha)) )
+#   }
+#   # para$optim_alpha <- maxBFGS(para$lb_alpha, grad = para$grad_alpha, start = para$alpha,
+#   #                             constraints=list(ineqA = diag(nrow = para$K), ineqB = matrix(0,nrow = para$K)) )
+#   para$optim_alpha <- maxNR(para$lb_alpha, grad = para$grad_alpha, hess = para$hess_alpha, start = para$alpha) # rep(10^(-5), para$K))
+#
+#   para$alpha <- para$optim_alpha$estimate
+#
+#   return(para)
+# }
 
 
 #' Run ATM on diagnosis data.
@@ -594,13 +594,13 @@ update_alpha <- function(para){
 #'
 #' @param rec_data A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids, second column is the disease code;
 #' third column is the age at diagnosis. Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
-#' within each individual, the rest will be ignored.
-#' @param topic_num Number of topics to infer.
+#' within each individual, the rest will be ignored. If there is no age variation in the third column, LDA (no age information) will be run instead of ATM.
+#' @param topic_num Number of topics to infer. Default is 10 but we highly recommend running multiple choices of this number.
 #' @param degree_free_num control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial, cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.
 #' @param CVB_num Number of runs with random initialization. The final output will be the run with highest ELBO value.
 #' @param save_data A flag which determine whether full model data will be saved. If TRUE, a Results/ folder will be created and full model data will be saved. Default is set to be FALSE.
 #'
-#' @return Reture a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
+#' @return Return a list object with topic_loadings (of the best run), topic_weights (of the best run), ELBO_convergence (ELBO until convergence),
 #' patient_list (list of eid which correspond to rows of topic_weights), ds_list (gives the ordering of diseases in the topic_loadings object), disease_number (number of total diseases), patient_number(total number of patients), topic_number (total number of topic),
 #' topic_configuration (control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial,
 #' cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.), multiple_run_ELBO_compare (ELBO of each runs).
@@ -609,75 +609,179 @@ update_alpha <- function(para){
 #' @examples   HES_age_small_sample <- HES_age_example %>%
 #' dplyr::slice_sample(prop = 0.1)
 #' inference_results <- wrapper_ATM(HES_age_small_sample, topic_num = 10, CVB_num = 1)
-wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, save_data = F){
-  ds_list <- rec_data %>%
+wrapper_ATM <- function(rec_data, topic_num = 10, degree_free_num = 3, CVB_num = 5, save_data = F){
+  # check if disease only has one entry, remove them
+  print("Disease code that have only less than 20 entry will be removed.")
+  ds_list_check <- rec_data %>%
     group_by(diag_icd10) %>%
-    summarise(occ = n())
-  topics <- list()
-  ELBOs <- list()
-  topic_weights <- list()
-  for(cvb_rep in 1:CVB_num){
-    print(paste0("CVB inference number: ", cvb_rep))
-    para <- topic_init_age(rec_data, ds_list, topic_num, degree_free_num)
-    # set the number of update
-    para$max_itr <- 2000
-    para$alpha <- rep(1, para$K)
-    para$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para))
-    para$itr_beta <- 1
-    para$itr_check_lb <- 5
-    para$itr_save <- para$max_itr + 1 # don't need to save intermediate data
-    para$tol <- 10^(-6)
-    for(itr in 1:para$max_itr){
-      print(paste0("Interation: ",itr))
-      for(itr_inside in 1:para$itr_beta){ # in practice we perform quick steps a few times before move on.
-        para <- CVB0_E_zn(para) # we choose CVB0 as papers shown it could converge quicker
-        # para <- comp_E_lntheta(para)
+    summarise(occ = n()) %>%
+    filter(occ >= 20)
+  rec_data <- rec_data %>%
+    filter(diag_icd10 %in% ds_list_check$diag_icd10)
+
+  # test if all age are equal
+  if(length(unique(rec_data$age_diag)) <= 1){
+    print("No age variation in the data; use collapsed variational inference of LDA.")
+    output <- wrapper_LDA(rec_data=rec_data, topic_num=topic_num, CVB_num = CVB_num, save_data = save_data)
+    return(output)
+  }else{
+    ds_list <- rec_data %>%
+      group_by(diag_icd10) %>%
+      summarise(occ = n())
+    topics <- list()
+    ELBOs <- list()
+    topic_weights <- list()
+    for(cvb_rep in 1:CVB_num){
+      print(paste0("CVB inference number: ", cvb_rep))
+      para <- topic_init_age(rec_data, ds_list, topic_num, degree_free_num)
+      # set the number of update
+      para$max_itr <- 2000
+      para$alpha <- rep(1, para$K)
+      para$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para))
+      para$itr_beta <- 1
+      para$itr_check_lb <- 5
+      para$itr_save <- para$max_itr + 1 # don't need to save intermediate data
+      para$tol <- 10^(-6)
+      for(itr in 1:para$max_itr){
+        print(paste0("Interation: ",itr))
+        for(itr_inside in 1:para$itr_beta){ # in practice we perform quick steps a few times before move on.
+          para <- CVB0_E_zn(para) # we choose CVB0 as papers shown it could converge quicker
+          # para <- comp_E_lntheta(para)
+        }
+        para <- fast_update_age_depend_lda(para)
+        # para <- update_alpha(para) # we use non-informative alpha
+        para$lb[nrow(para$lb) + 1,] <- c(itr, CVB_lb(para))
+        if(itr %% para$itr_check_lb  ==0){
+          curr_lb <- pull(filter(para$lb, Iteration == itr), Lower_bound)
+          prev_lb <- pull(filter(para$lb, Iteration == (itr -para$itr_check_lb )), Lower_bound)
+          print(paste0("Current Lower bound ", curr_lb, " at iteration: ",itr))
+          try({
+            if(is.finite((curr_lb - prev_lb)) & (curr_lb - prev_lb)/abs(prev_lb) < para$tol ){
+              print(paste0("Optimization converged at step ", itr))
+              break
+            }
+          })
+        }
       }
-      para <- fast_update_age_depend_lda(para)
-      # para <- update_alpha(para) # we use non-informative alpha
-      para$lb[nrow(para$lb) + 1,] <- c(itr, CVB_lb(para))
-      if(itr %% para$itr_check_lb  ==0){
-        curr_lb <- pull(filter(para$lb, Iteration == itr), Lower_bound)
-        prev_lb <- pull(filter(para$lb, Iteration == (itr -para$itr_check_lb )), Lower_bound)
-        print(paste0("Current Lower bound ", curr_lb, " at iteration: ",itr))
-        try({
-          if(is.finite((curr_lb - prev_lb)) & (curr_lb - prev_lb)/abs(prev_lb) < para$tol ){
-            print(paste0("Optimization converged at step ", itr))
-            break
-          }
-        })
-      }
+      topics[[cvb_rep]] <- para$pi_beta_basis
+      ELBOs[[cvb_rep]]  <- para$lb
+      topic_weights[[cvb_rep]] <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
+
+      if(save_data){
+        print(paste0("Saving full model for CVB rep", cvb_rep))
+        dir.create("Results")
+        save(para, file = paste0("Results/","fullmodel_ATM_cvbrep_", cvb_rep, "K",para$K,"_P",para$P, ".RData"))
+        }
+
     }
-    topics[[cvb_rep]] <- para$pi_beta_basis
-    ELBOs[[cvb_rep]]  <- para$lb
-    topic_weights[[cvb_rep]] <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
+    multi_runs <- list(topics, ELBOs)
+    # find the best reps in the data
+    lb_rep <- tibble::tibble(reps = as.integer(), lower_bound = as.numeric())
+    for(cvb_rep in 1:CVB_num){
+      cvrg_lb <-  ELBOs[[cvb_rep]] %>%
+        filter(!is.na(Lower_bound)) %>%
+        dplyr::slice_tail(n = 1) %>%
+        pull(2)
+      lb_rep <- lb_rep %>%
+        dplyr::add_row(reps = cvb_rep, lower_bound = cvrg_lb)
+    }
+    best_id <- order(lb_rep$lower_bound, decreasing = T)[1]
 
+    # save a smaller dataset
+    model_output <- list(topics[[best_id]], ELBOs[[best_id]], para$D, para$M, para$K, para$P, lb_rep)
     if(save_data){
-      print(paste0("Saving full model for CVB rep", cvb_rep))
-      dir.create("Results")
-      save(para, file = paste0("Results/","fullmodel_ATM_cvbrep_", cvb_rep, "K",para$K,"_P",para$P, ".RData"))
+      save(multi_runs, file = paste0("Results/","multirun", CVB_num, "K",para$K,"_P",para$P, ".RData"))
+      save(model_output, file = paste0("Results/","best_output_AgeLDA_RunNumber", CVB_num, "K",para$K,"_P",para$P, ".RData"))
+    }
+    output <- list()
+    output$topic_loadings <- topics[[best_id]]
+    output$topic_weights <- topic_weights[[best_id]]
+    output$ELBO_convergence <- ELBOs[[best_id]]
+    output$ds_list <- para$list_above500occu
+    output$patient_list <- para$eid
+    output$disease_number <-  para$D
+    output$patient_number <- para$M
+    output$topic_number <- para$K
+    output$topic_configuration <-para$P
+    output$multiple_run_ELBO_compare <-lb_rep
+    return(output)
+  }
+}
+
+# helper function to run LDA when there are no age information
+wrapper_LDA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
+    ds_list <- rec_data %>%
+      group_by(diag_icd10) %>%
+      summarise(occ = n())
+    topics <- list()
+    ELBOs <- list()
+    topic_weights <- list()
+    for(cvb_rep in 1:CVB_num){
+      print(paste0("CVB inference number: ", cvb_rep))
+      para <- topic_init_age(rec_data, ds_list, topic_num, degree_free_num)
+      # set the number of update
+      para$max_itr <- 2000
+      para$alpha <- rep(1, para$K)
+      para$lb <- data.frame("Iteration" = 0,"Lower_bound" = CVB_lb(para))
+      para$itr_beta <- 1
+      para$itr_check_lb <- 5
+      para$itr_save <- para$max_itr + 1 # don't need to save intermediate data
+      para$tol <- 10^(-6)
+      for(itr in 1:para$max_itr){
+        print(paste0("Interation: ",itr))
+        for(itr_inside in 1:para$itr_beta){ # in practice we perform quick steps a few times before move on.
+          para <- CVB0_E_zn(para) # we choose CVB0 as papers shown it could converge quicker
+          # para <- comp_E_lntheta(para)
+        }
+
+        para <- update_beta_basic_lda(para)
+
+        # para <- update_alpha(para) # we use non-informative alpha
+        para$lb[nrow(para$lb) + 1,] <- c(itr, CVB_lb(para))
+        if(itr %% para$itr_check_lb  ==0){
+          curr_lb <- pull(filter(para$lb, Iteration == itr), Lower_bound)
+          prev_lb <- pull(filter(para$lb, Iteration == (itr -para$itr_check_lb )), Lower_bound)
+          print(paste0("Current Lower bound ", curr_lb, " at iteration: ",itr))
+          try({
+            if(is.finite((curr_lb - prev_lb)) & (curr_lb - prev_lb)/abs(prev_lb) < para$tol ){
+              print(paste0("Optimization converged at step ", itr))
+              break
+            }
+          })
+        }
+        }
+
+      topics[[cvb_rep]] <- para$beta
+      ELBOs[[cvb_rep]]  <- para$lb
+      topic_weights[[cvb_rep]] <- sweep((para$alpha_z - 1), 1, rowSums(para$alpha_z -1), FUN="/")
+
+      if(save_data){
+        print(paste0("Saving full model for CVB rep", cvb_rep))
+        dir.create("Results")
+        save(para, file = paste0("Results/","fullmodel_ATM_cvbrep_", cvb_rep, "K",para$K,"_P",para$P, ".RData"))
       }
 
-  }
-  multi_runs <- list(topics, ELBOs)
-  # find the best reps in the data
-  lb_rep <- tibble::tibble(reps = as.integer(), lower_bound = as.numeric())
-  for(cvb_rep in 1:CVB_num){
-    cvrg_lb <-  ELBOs[[cvb_rep]] %>%
-      filter(!is.na(Lower_bound)) %>%
-      dplyr::slice_tail(n = 1) %>%
-      pull(2)
-    lb_rep <- lb_rep %>%
-      dplyr::add_row(reps = cvb_rep, lower_bound = cvrg_lb)
-  }
-  best_id <- order(lb_rep$lower_bound, decreasing = T)[1]
+    }
+    multi_runs <- list(topics, ELBOs)
+    # find the best reps in the data
+    lb_rep <- tibble::tibble(reps = as.integer(), lower_bound = as.numeric())
+    for(cvb_rep in 1:CVB_num){
+      cvrg_lb <-  ELBOs[[cvb_rep]] %>%
+        filter(!is.na(Lower_bound)) %>%
+        dplyr::slice_tail(n = 1) %>%
+        pull(2)
+      lb_rep <- lb_rep %>%
+        dplyr::add_row(reps = cvb_rep, lower_bound = cvrg_lb)
+    }
+    best_id <- order(lb_rep$lower_bound, decreasing = T)[1]
 
-  # save a smaller dataset
-  model_output <- list(topics[[best_id]], ELBOs[[best_id]], para$D, para$M, para$K, para$P, lb_rep)
-  if(save_data){
-    save(multi_runs, file = paste0("Results/","multirun", CVB_num, "K",para$K,"_P",para$P, ".RData"))
-    save(model_output, file = paste0("Results/","best_output_AgeLDA_RunNumber", CVB_num, "K",para$K,"_P",para$P, ".RData"))
-  }
+    # save a smaller dataset
+    model_output <- list(topics[[best_id]], ELBOs[[best_id]], para$D, para$M, para$K, para$P, lb_rep)
+    if(save_data){
+      save(multi_runs, file = paste0("Results/","multirun", CVB_num, "K",para$K,"_P",para$P, ".RData"))
+      save(model_output, file = paste0("Results/","best_output_AgeLDA_RunNumber", CVB_num, "K",para$K,"_P",para$P, ".RData"))
+    }
+
   output <- list()
   output$topic_loadings <- topics[[best_id]]
   output$topic_weights <- topic_weights[[best_id]]
@@ -687,7 +791,6 @@ wrapper_ATM <- function(rec_data, topic_num, degree_free_num = 3, CVB_num = 5, s
   output$disease_number <-  para$D
   output$patient_number <- para$M
   output$topic_number <- para$K
-  output$topic_configuration <-para$P
   output$multiple_run_ELBO_compare <-lb_rep
   return(output)
 }
@@ -758,4 +861,100 @@ snomed2phecode <- function(rec_data){
 
 
 
+#' Disease matrix reformatting for ATM
+#'
+#' @param disease_matrix a disease matrix with the first column name "eid", other column are disease names. Disease should be coded as 0,1.
+#'
+#' @returns a data frame which can be feed into ATM_wrapper
+#' @export
+#'
+#' @examples
+#' disease_matrix <- ATM:::longdata2diseasematrix(HES_age_example)
+#' diseasematrix2longdata(disease_matrix)
+diseasematrix2longdata <- function(disease_matrix){
+  rec_data <- disease_matrix %>%
+    pivot_longer(cols = -eid, names_to = "diag_icd10", values_to = "disease") %>%
+    filter(disease == 1) %>%
+    mutate(age_diag = 99) %>%
+    select(-disease)
+  return(rec_data)
+}
 
+
+#' imputing missing age if you can't find some of them
+#' The function does two stage imputation:
+#'  i. if the individual has other age label -- use the mean, min, or max of other age labels for the missing ones.
+#'  ii. if the individual has no age label -- use the mean, min, max for all the diagnosis codes
+#'  iii. if there is no age info available for any of this code, we will impute it as the mean of all age codes in the data
+#'
+#' @param rec_data_missing_age a data frame with missing age info
+#' @param method use one of the three choices "mean", "min", "max"
+#'
+#' @returns a data frame that is imputed and ready for ATM_wrapper
+#' @export
+#'
+#' @examples rec_data_missing_age <- HES_age_example
+#'  rec_data_missing_age$age_diag[1:10000] <- NA
+#'  rec_data_imputed <- age_imputation(rec_data_missing_age, method= "mean")
+#'  cor(rec_data_imputed$age_diag[1:10000], HES_age_example$age_diag[1:10000])
+#'  rec_data_imputed <- age_imputation(rec_data_missing_age, method= "min")
+#'  cor(rec_data_imputed$age_diag[1:10000], HES_age_example$age_diag[1:10000])
+#'  rec_data_imputed <- age_imputation(rec_data_missing_age, method= "max")
+#'  cor(rec_data_imputed$age_diag[1:10000], HES_age_example$age_diag[1:10000])
+age_imputation <- function(rec_data_missing_age, method= "mean"){
+  # handling weird value
+  rec_data_missing_age <- rec_data_missing_age %>%
+    mutate(age_diag = if_else((age_diag>90 | age_diag<0) , NA_real_, age_diag))
+
+  if(method == "mean"){
+    # first the age imputation for an individual
+    age_range_per_indv <- rec_data_missing_age %>%
+      group_by(eid) %>%
+      summarise(age_sub1 = mean(age_diag, na.rm = T))
+    # second the age imputation for an the disease code
+    age_range_per_disease <- rec_data_missing_age %>%
+      group_by(diag_icd10) %>%
+      summarise(age_sub2 = mean(age_diag, na.rm = T))
+
+    age_pop_avg <- mean(rec_data_missing_age$age_diag, na.rm = T)
+
+  }else if(method== "max"){
+    # first the age imputation for an individual
+    age_range_per_indv <- rec_data_missing_age %>%
+      group_by(eid) %>%
+      dplyr::summarise(age_sub1 = suppressWarnings(max(age_diag, na.rm = T))) %>%
+      mutate(age_sub1 = if_else((age_sub1>90 | age_sub1<0) , NA_real_, age_sub1))
+    # second the age imputation for an the disease code
+    age_range_per_disease <- rec_data_missing_age %>%
+      group_by(diag_icd10) %>%
+      summarise(age_sub2 = suppressWarnings(max(age_diag, na.rm = T))) %>%
+      mutate(age_sub2 = if_else((age_sub2>90 | age_sub2<0) , NA_real_, age_sub2))
+
+    age_pop_avg <- max(rec_data_missing_age$age_diag, na.rm = T)
+    age_pop_avg <- if_else((age_pop_avg>90 | age_pop_avg<0) , NA_real_, age_pop_avg)
+
+  }else if(method== "min"){
+    # first the age imputation for an individual
+    age_range_per_indv <- rec_data_missing_age %>%
+      group_by(eid) %>%
+      dplyr::summarise(age_sub1 = suppressWarnings(min(age_diag, na.rm = T))) %>%
+      mutate(age_sub1 = if_else((age_sub1>90 | age_sub1<0) , NA_real_, age_sub1))
+    # second the age imputation for an the disease code
+    age_range_per_disease <- rec_data_missing_age %>%
+      group_by(diag_icd10) %>%
+      summarise(age_sub2 = suppressWarnings(min(age_diag, na.rm = T))) %>%
+      mutate(age_sub2 = if_else((age_sub2>90 | age_sub2<0) , NA_real_, age_sub2))
+
+    age_pop_avg <- min(rec_data_missing_age$age_diag, na.rm = T)
+    age_pop_avg <- if_else((age_pop_avg>90 | age_pop_avg<0) , NA_real_, age_pop_avg)
+  }
+  # finding the first value from the substitute
+  rec_data <- rec_data_missing_age %>%
+    left_join(age_range_per_indv, by = "eid") %>%
+    left_join(age_range_per_disease, by = "diag_icd10") %>%
+    mutate(age_sub3 = age_pop_avg) %>%
+    mutate(age_diag = dplyr::coalesce(age_diag, age_sub1, age_sub2, age_sub3)) %>%
+    select(eid, diag_icd10, age_diag)
+
+  return(rec_data)
+}
