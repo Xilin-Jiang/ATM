@@ -85,7 +85,7 @@ ATM_results <- wrapper_ATM(rec_data_imputed, 10, CVB_num = 1)
 
 We provide example simulated data in the package. `UKB_349_disease` is the list of 349 diseases (Phecode) that have more than 1000 incidences in the UK Biobank HES data. `HES_age_example` is an example data simulated using the comorbidity distribution in UK Biobank; for inferring disease topics using ATM, you should format the data as `HES_age_example`, which requires individual id, disease diagnosis, and age-at-diagnosis.  `UKB_HES_10topics` is the optimal disease topic from UK Biobank HES data set, using the 349 diseases.
 
-Though ATM could be run on any valid coding system, we recommend using Phecode for ATM to reduce coding redundancy in systems such as ICD-10. To map from ICD-10 code to Phecode, use function `icd2phecode`. `icd2phecode` make use of ICD-10 to phecode mapping which are saved as internal data in ATM package: `phecode_icd10cm` maps between ICD-10-CM to Phecode; `phecode_icd10` maps ICD-10 to Phecode; `disease_info_phecode_icd10` saves the disease names of 1755 Phecodes, use `UKB_349_disease %>% left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" ))`.
+Though ATM could be run on any valid coding system, we recommend using Phecode for ATM to reduce coding redundancy in coding systems such as ICD-10. To map from ICD-10 code to Phecode, use function `icd2phecode`. `icd2phecode` make use of ICD-10 to phecode mapping which are saved as internal data in ATM package: `phecode_icd10cm` maps between ICD-10-CM to Phecode; `phecode_icd10` maps ICD-10 to Phecode; `disease_info_phecode_icd10` saves the disease names of 1755 Phecodes, use `UKB_349_disease %>% left_join(disease_info_phecode_icd10, by = c("diag_icd10"="phecode" ))`.
 
 ## Data preparation
 
@@ -206,7 +206,7 @@ The generative process (Supplementary Figure 1) is as follows:
   here $t_{sn}$ is the age of the observed age-at-onset of the observed diagnosis $w_{sn}$.
 
 ## GWAS using Latent Feature Allocation LFA
-For GWAS on comorbidities, we recommend using Latent Feature Allocation (LFA) which infers topic weights that are more suitable for GWAS. Details of the LFA model is in the [comorbidity GWAS (Zhang, Jiang, et al. 2023 Cell Genomics)](https://www.cell.com/cell-genomics/pdf/S2666-979X(23)00166-0.pdf) paper. We have now implemented a collapsed variational inference methods of LFA, which is several magnitude faster than the original Gibb's sampling method, while using similar amount of memory. 
+For GWAS on comorbidities, we recommend using Latent Feature Allocation (LFA) which infers topic weights that are more suitable for GWAS. Details of the LFA model is in the [comorbidity GWAS (Zhang, Jiang, et al. 2023 Cell Genomics)](https://doi.org/10.1016/j.xgen.2023.100371) paper. We have now implemented a collapsed variational inference methods of LFA, which is several magnitude faster than the original Gibb's sampling method, while using similar amount of memory. 
 
 A comparison of LFA and ATM is as below. ATM only models disease records (left) while LFA could model both patient and healthy individual (right). We have found models including LFA that uses non-sparse coding of disease topics to be more powerful at identifying disease loci.  
 

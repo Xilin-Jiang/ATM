@@ -823,6 +823,7 @@ icd2phecode <- function(rec_data){
   new_data <- rec_data %>%
     select(eid, diag_icd10, age_diag) %>%
     filter(stringr::str_detect(diag_icd10, "^[A-N]")) %>%
+    mutate(diag_icd10 = sub("[.]","",diag_icd10)) %>%
     left_join(phecode_icd10cm, by = c("diag_icd10" = "ICD10")) %>%
     mutate(diag_icd10 = substring(diag_icd10, 1,4)) %>%
     left_join(phecode_icd10, by = c("diag_icd10" = "ICD10"))  %>%

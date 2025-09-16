@@ -3,3 +3,4 @@
 ^data-raw$
 ^LICENSE\.md$
 ^legacy$
+^cran-comments\.md$

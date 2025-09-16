@@ -60,7 +60,7 @@ usethis::use_data(HES_age_example, overwrite = TRUE)
 
 # code to create `phecode_icd10cm`, `phecode_icd10`, and `disease_info_phecode_icd10`; mapping between ICD2Phecode
 # mapping all ICD-10 to phecodes; need to first deal with the non-mapping (one icd10 to different phecode)
-DIR <- "~/Desktop/comorbidity/Multi-morbidity_biobank/"
+DIR <- "~/Desktop/PROJECTS/Jiang_2023_NG_ATM/Multi-morbidity_biobank/"
 non_one2one_map <- read.csv(paste0(DIR, "Phecode_map_v1_2_icd10cm_beta.csv")) %>%
   group_by(phecode) %>%
   summarise(occ = n())
