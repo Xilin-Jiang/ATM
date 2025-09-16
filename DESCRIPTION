@@ -1,6 +1,6 @@
 Package: AgeTopicModels
 Title: Inferring Age-Dependent Disease Topic from Diagnosis Data
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person("Xilin", "Jiang", , "xilinjiang@hsph.harvard.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-6773-9182"))
