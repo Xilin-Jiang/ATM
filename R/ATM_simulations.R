@@ -222,7 +222,8 @@ generate_genetics <- function(maf, n){
 #' @examples
 #' disease2topic <- 0
 #' cont_v2t <- 20
-#' rslts <- simulate_topics(topic_number = 2, disease2topic  = disease2topic, v2t = cont_v2t )
+#' rslts <- simulate_topics(topic_number = 2, pop_sz=1000,
+#'   disease2topic  = disease2topic, v2t = cont_v2t )
 #' para_sim <- rslts[[1]]
 #' genetics_population <- rslts[[2]]
 #' causal_disease <- rslts[[3]]
@@ -294,7 +295,8 @@ simulate_topics <- function(topic_number, num_snp=100, pop_sz=10000, disease2top
 #' fourth element is the disease list (binary) representing #3 structure.
 #' @export
 #'
-#' @examples rslts <- simulate_topics(topic_number = 2, disease2topic  = 0.1, v2t = 20 )
+#' @examples rslts <- simulate_topics(topic_number = 2,
+#'           pop_sz=1000, disease2topic  = 0.1, v2t = 20 )
 #' para_sim <- rslts[[1]]
 #' genetics_population <- rslts[[2]]
 #' causal_disease <- rslts[[3]]

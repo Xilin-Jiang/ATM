@@ -1,7 +1,4 @@
-# AgeTopicModels 0.2.0
-
 # AgeTopicModels 0.1.0
 
-# ATM (development version)
-
 * Initial CRAN submission.
+* Age-dependent disease topic modeling; utilities for ICD-10/ICD-10-CM mappings. Paper is accepted at Jiang et al. 2023 Nature. 

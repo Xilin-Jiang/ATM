@@ -46,15 +46,15 @@ UKB_349_disease <- read.csv("~/Desktop/comorbidity/Multi-morbidity_biobank/listA
 usethis::use_data(UKB_349_disease, overwrite = TRUE)
 
 # code to prepare `HES_age_example` data set
-rec_data <- read.csv("~/Desktop/comorbidity/Multi-morbidity_biobank/rec2subjectAbove1000occur_include_death_PheCode.csv")
+rec_data <- read.csv("~/Desktop/PROJECTS/Jiang_2023_NG_ATM/Multi-morbidity_biobank/rec2subjectAbove1000occur_include_death_PheCode.csv")
 sample_eid <- rec_data %>%
   group_by(eid) %>%
   summarise(per_patient_diag = n()) %>%
-  filter(per_patient_diag > 10)
+  filter(per_patient_diag > 20)
 HES_age_example <- rec_data %>%
   filter(eid %in% sample_eid$eid) %>%
   group_by(eid) %>%
-  sample_frac(0.5) %>%
+  sample_frac(0.3) %>%
   ungroup()
 usethis::use_data(HES_age_example, overwrite = TRUE)
 
@@ -118,15 +118,15 @@ usethis::use_data(disease_info_phecode_icd10, overwrite = TRUE)
 
 # save an icd10 rec_data as an example
 # code to prepare `HES_icd10_example` data set
-rec_data <- read.csv("~/Desktop/comorbidity/Multi-morbidity_biobank/rec2subjectAbove500occur_ICDA2N.csv")
+rec_data <- read.csv("~/Desktop/PROJECTS/Jiang_2023_NG_ATM/Multi-morbidity_biobank/rec2subjectAbove500occur_ICDA2N.csv")
 sample_eid <- rec_data %>%
   group_by(eid) %>%
   summarise(per_patient_diag = n()) %>%
-  filter(per_patient_diag > 10)
+  filter(per_patient_diag > 20)
 HES_icd10_example <- rec_data %>%
   filter(eid %in% sample_eid$eid) %>%
   group_by(eid) %>%
-  sample_frac(0.5) %>%
+  sample_frac(0.3) %>%
   ungroup()
 usethis::use_data(HES_icd10_example, overwrite = TRUE)
 
@@ -158,7 +158,7 @@ SNOMED_ICD10CM <- SNOMED_ICD10CM %>%
   mutate(ICD10 = sub("[.]","",ICD10)) %>%
   mutate(ICD10 = sub("[X]","",ICD10)) %>%
   mutate(ICD10 = sub("[?]","",ICD10)) %>%
-  filter(ICD10 != "", ICD10 %in% ATM::phecode_icd10cm$ICD10) %>%
+  filter(ICD10 != "", ICD10 %in% phecode_icd10cm$ICD10) %>%
   left_join(ordering_hes_UKBB, by = c("ICD10" = "diag_icd10")) %>%
   group_by(SNOMED) %>%
   arrange(desc(occ), .by_group = T) %>% # select the ICD10 codes that are most popular in UKBB

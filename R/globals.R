@@ -7,3 +7,7 @@ utils::globalVariables(c(
   "para","phecode","phecode_icd10","phecode_icd10cm","short_icd10",
   "survive_age","survive_year","age_gap","id"
 ))
+
+if (getRversion() >= "2.15.1") {
+  utils::globalVariables(c("n()", "SNOMED_ICD10CM"))
+}

@@ -592,8 +592,8 @@ update_beta_basic_lda <- function(para){
 #' if the data set is small and the goal is to infer patient-level topic weights (i.e. assign comorbidity profiles to individuals based on the disedases),
 #' please use loading2weights.
 #'
-#' @param rec_data A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids, second column is the disease code;
-#' third column is the age at diagnosis. Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
+#' @param rec_data A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids (eid), second column is the disease code (diag_icd10);
+#' third column is the age at diagnosis (age_diag). Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
 #' within each individual, the rest will be ignored. If there is no age variation in the third column, LDA (no age information) will be run instead of ATM.
 #' @param topic_num Number of topics to infer. Default is 10 but we highly recommend running multiple choices of this number.
 #' @param degree_free_num control the parametric for of topic loadings: Degrees of freedom (d.f.) from 2 to 7 represent linear, quadratic polynomial, cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.
@@ -796,6 +796,16 @@ wrapper_LDA <- function(rec_data, topic_num, CVB_num = 5, save_data = F){
 }
 
 # function to turn rec_data to a matrix of disease
+#' Title
+#'
+#' @param rec_data A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids (eid), second column is the disease code (diag_icd10);
+#' third column is the age at diagnosis (age_diag). Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
+#' within each individual, the rest will be ignored.
+#'
+#' @returns a disease matrix with first column being the individual ids, columns follows are diseases with 0,1 coding.
+#' @export
+#'
+#' @examples disease_matrix <- longdata2diseasematrix(HES_age_example)
 longdata2diseasematrix <- function(rec_data){
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%
@@ -849,13 +859,13 @@ icd2phecode <- function(rec_data){
 snomed2phecode <- function(rec_data){
   icd10_data <- rec_data %>%
     mutate(diag_icd10 = as.character(diag_icd10)) %>% # seem to fix the bug
-    left_join(select(ATM::SNOMED_ICD10CM, SNOMED, ICD10), by = c("diag_icd10" = "SNOMED")) %>%
+    left_join(select(SNOMED_ICD10CM, SNOMED, ICD10), by = c("diag_icd10" = "SNOMED")) %>%
     select(-diag_icd10) %>%
     rename(diag_icd10 = ICD10) %>%
     filter(!is.na(diag_icd10))
   print(paste0((dim(icd10_data)[1]/dim(rec_data)[1])*100 ,"% of the SNOMED records are mapped to a ICD10 codes"))
 
-  new_data <- ATM::icd2phecode(icd10_data)
+  new_data <- icd2phecode(icd10_data)
 
   return(new_data)
 }
@@ -870,7 +880,7 @@ snomed2phecode <- function(rec_data){
 #' @export
 #'
 #' @examples
-#' disease_matrix <- ATM:::longdata2diseasematrix(HES_age_example)
+#' disease_matrix <- longdata2diseasematrix(HES_age_example)
 #' diseasematrix2longdata(disease_matrix)
 diseasematrix2longdata <- function(disease_matrix){
   rec_data <- disease_matrix %>%

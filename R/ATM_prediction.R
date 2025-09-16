@@ -637,7 +637,7 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
 #' Title Compute prediction odds ratio for a testing data set using pre-training ATM topic loading. Note only diseases listed in the ds_list will be used.
 #' The prediction odds ratio is the odds predicted by ATM versus a naive prediction using disease probability.
 #'
-#' @param testing_data A data set of the same format as ATM::HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing. Note the test data that has diagnosis age outside the topic loading is disgarded, as we don't recommend extrapolate topic loadings outside the training data.
+#' @param testing_data A data set of the same format as HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing. Note the test data that has diagnosis age outside the topic loading is disgarded, as we don't recommend extrapolate topic loadings outside the training data.
 #' @param ds_list The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
 #' The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.
 #' @param topic_loadings A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;
@@ -649,9 +649,9 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
 #' 0.03 means the target disease ranked at 3% of the diseases ordered by ATM predicted probability.
 #' @export
 #'
-#' @examples testing_data <- ATM::HES_age_example %>% dplyr::slice(1:10000)
-#' new_output <- prediction_OR(testing_data, ds_list = ATM::UKB_349_disease,
-#'                  topic_loadings =  ATM::UKB_HES_10topics, max_predict = 5)
+#' @examples testing_data <- HES_age_example %>% dplyr::slice(1:10000)
+#' new_output <- prediction_OR(testing_data, ds_list = UKB_349_disease,
+#'                  topic_loadings =  UKB_HES_10topics, max_predict = 5)
 prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = NULL){
   # first order the incidences by age
   testing_data <- testing_data %>%
@@ -713,7 +713,7 @@ prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = N
       # for both treeLDA and baseline lda, we only need to initialise baseline case here
       para_testing <- topic_init_baseline(estimating_test_set, ds_list, dim(topic_loadings)[3])
     }else{
-      para_testing <- topic_init_age(estimating_test_set, ds_list, dim(ATM::UKB_HES_10topics)[3], degree_free_num = 5) # just use 5, it won't matter
+      para_testing <- topic_init_age(estimating_test_set, ds_list, dim(UKB_HES_10topics)[3], degree_free_num = 5) # just use 5, it won't matter
     }
     # directly get the alpha_z
     test_set_topic_weights <- loading2weights(estimating_test_set, ds_list = ds_list, topic_loadings)

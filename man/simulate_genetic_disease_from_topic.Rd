@@ -65,7 +65,8 @@ output
 }
 }
 \examples{
-rslts <- simulate_topics(topic_number = 2, disease2topic  = 0.1, v2t = 20 )
+rslts <- simulate_topics(topic_number = 2,
+          pop_sz=1000, disease2topic  = 0.1, v2t = 20 )
 para_sim <- rslts[[1]]
 genetics_population <- rslts[[2]]
 causal_disease <- rslts[[3]]

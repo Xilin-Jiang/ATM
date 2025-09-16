@@ -4,3 +4,5 @@
 ^LICENSE\.md$
 ^legacy$
 ^cran-comments\.md$
+^dev$
+^CRAN-SUBMISSION$

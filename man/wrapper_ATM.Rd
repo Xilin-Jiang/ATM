@@ -13,8 +13,8 @@ wrapper_ATM(
 )
 }
 \arguments{
-\item{rec_data}{A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids, second column is the disease code;
-third column is the age at diagnosis. Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
+\item{rec_data}{A diagnosis data frame with three columns; format data as HES_age_example; first column is individual ids (eid), second column is the disease code (diag_icd10);
+third column is the age at diagnosis (age_diag). Note for each individual, we only keep the first onset of each diseases. Therefore, if there are multiple incidences of the same disease
 within each individual, the rest will be ignored. If there is no age variation in the third column, LDA (no age information) will be run instead of ATM.}
 
 \item{topic_num}{Number of topics to infer. Default is 10 but we highly recommend running multiple choices of this number.}

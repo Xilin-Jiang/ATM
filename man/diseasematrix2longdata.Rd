@@ -16,6 +16,6 @@ a data frame which can be feed into ATM_wrapper
 Disease matrix reformatting for ATM
 }
 \examples{
-disease_matrix <- ATM:::longdata2diseasematrix(HES_age_example)
+disease_matrix <- longdata2diseasematrix(HES_age_example)
 diseasematrix2longdata(disease_matrix)
 }

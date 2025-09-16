@@ -64,7 +64,8 @@ all genetic effect are on the first topic only
 \examples{
 disease2topic <- 0
 cont_v2t <- 20
-rslts <- simulate_topics(topic_number = 2, disease2topic  = disease2topic, v2t = cont_v2t )
+rslts <- simulate_topics(topic_number = 2, pop_sz=1000,
+  disease2topic  = disease2topic, v2t = cont_v2t )
 para_sim <- rslts[[1]]
 genetics_population <- rslts[[2]]
 causal_disease <- rslts[[3]]
