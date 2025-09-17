@@ -639,8 +639,8 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
 #'
 #' @param testing_data A data set of the same format as HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing. Note the test data that has diagnosis age outside the topic loading is disgarded, as we don't recommend extrapolate topic loadings outside the training data.
 #' @param ds_list The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
-#' The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.
-#' @param topic_loadings A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;
+#' The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See AgeTopicModels::UKB_349_disease as an example.
+#' @param topic_loadings A three dimension array of topic loading in the format of AgeTopicModels::UKB_HES_10topics;
 #' @param max_predict The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis; we perform this prediction in turn, starting from using first disease to predict sencond....
 #' for the max_predict^th disease, we will just predict all diseases afterwards, using only 1,..(max_predict-1) diseseas to learn the topic weights; default is set to be 11 (using 1,...10 disease to predict).
 #'
@@ -649,7 +649,9 @@ prediction_PheRS_by_disease <- function(testing_data, ds_list, para_training){
 #' 0.03 means the target disease ranked at 3% of the diseases ordered by ATM predicted probability.
 #' @export
 #'
-#' @examples testing_data <- HES_age_example %>% dplyr::slice(1:10000)
+#' @examples
+#' set.seed(1)
+#' testing_data <- HES_age_example %>% dplyr::slice(1:1000)
 #' new_output <- prediction_OR(testing_data, ds_list = UKB_349_disease,
 #'                  topic_loadings =  UKB_HES_10topics, max_predict = 5)
 prediction_OR <- function(testing_data, ds_list, topic_loadings, max_predict = NULL){

@@ -16,8 +16,9 @@ A data frame/tibble with example rows. Typical columns include:
 HES_age_example
 }
 \description{
-A tiny illustrative subset of Hospital Episode Statistics (HES) data
+A realistic sized simulated Hospital Episode Statistics (HES) data
 with participant IDs and ages at diagnosis, used in examples and tests.
+You would expect the run time of AgeTopicModels on these data is similar to what you face in real life
 }
 \examples{
 head(HES_age_example)

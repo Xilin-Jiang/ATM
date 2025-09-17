@@ -1,7 +1,8 @@
 #' Example HES diagnosis ages
 #'
-#' A tiny illustrative subset of Hospital Episode Statistics (HES) data
+#' A realistic sized simulated Hospital Episode Statistics (HES) data
 #' with participant IDs and ages at diagnosis, used in examples and tests.
+#' You would expect the run time of AgeTopicModels on these data is similar to what you face in real life
 #'
 #' @format A data frame/tibble with example rows. Typical columns include:
 #' \describe{
@@ -15,7 +16,7 @@
 
 #' Example HES ICD-10 diagnoses
 #'
-#' A tiny illustrative subset of HES diagnoses with participant IDs and ICD-10 codes.
+#' A realistic sized simulated HES diagnoses with participant IDs and ICD-10 codes.
 #'
 #' @format A data frame/tibble with example rows. Typical columns include:
 #' \describe{
@@ -27,7 +28,7 @@
 #' head(HES_icd10_example)
 "HES_icd10_example"
 
-#' SNOMED ↔ ICD-10(-CM) mapping (excerpt)
+#' SNOMED <-> ICD-10(-CM) mapping (excerpt)
 #'
 #' A small mapping table used by functions such as \code{\link{icd2phecode}}
 #'
@@ -84,7 +85,7 @@
 #' head(disease_info_phecode_icd10)
 "disease_info_phecode_icd10"
 
-#' ICD-10 ↔ PheCode mapping
+#' ICD-10 <-> PheCode mapping
 #'
 #' Mapping table between ICD-10 codes and PheCodes.
 #'
@@ -99,7 +100,7 @@
 #' head(phecode_icd10)
 "phecode_icd10"
 
-#' ICD-10-CM ↔ PheCode mapping
+#' ICD-10-CM <-> PheCode mapping
 #'
 #' Mapping table between ICD-10-CM codes and PheCodes.
 #'

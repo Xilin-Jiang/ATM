@@ -11,9 +11,9 @@ prediction_OR(testing_data, ds_list, topic_loadings, max_predict = NULL)
 \item{testing_data}{A data set of the same format as HES_age_example; Note: for cross-validation, split the training and testing based on individuals (eid) instead of diagnosis to avoid using training data for testing. Note the test data that has diagnosis age outside the topic loading is disgarded, as we don't recommend extrapolate topic loadings outside the training data.}
 
 \item{ds_list}{The order of disease code that appears in the topic loadings. This is a required input as the testing data could miss some of the records.
-The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See ATM::UKB_349_disease as an example.}
+The first column should be the disease code, second column being the occurrence (to serve as the baseline for prediction odds ratio). See AgeTopicModels::UKB_349_disease as an example.}
 
-\item{topic_loadings}{A three dimension array of topic loading in the format of ATM::UKB_HES_10topics;}
+\item{topic_loadings}{A three dimension array of topic loading in the format of AgeTopicModels::UKB_HES_10topics;}
 
 \item{max_predict}{The logic of prediction is using 1,..N-1 records to predict the Nth diagnosis; we perform this prediction in turn, starting from using first disease to predict sencond....
 for the max_predict^th disease, we will just predict all diseases afterwards, using only 1,..(max_predict-1) diseseas to learn the topic weights; default is set to be 11 (using 1,...10 disease to predict).}
@@ -28,7 +28,8 @@ Title Compute prediction odds ratio for a testing data set using pre-training AT
 The prediction odds ratio is the odds predicted by ATM versus a naive prediction using disease probability.
 }
 \examples{
-testing_data <- HES_age_example \%>\% dplyr::slice(1:10000)
+set.seed(1)
+testing_data <- HES_age_example \%>\% dplyr::slice(1:1000)
 new_output <- prediction_OR(testing_data, ds_list = UKB_349_disease,
                  topic_loadings =  UKB_HES_10topics, max_predict = 5)
 }

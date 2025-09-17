@@ -25,5 +25,6 @@ The second dataframe column incidence_weight_sum is eid and the cumulative topic
 Mapping individuals to fixed topic loadings.
 }
 \examples{
-new_weights <- loading2weights(HES_age_example)
+set.seed(1)
+new_weights <- loading2weights(HES_age_example[1:1000,])
 }

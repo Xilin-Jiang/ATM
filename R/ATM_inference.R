@@ -199,7 +199,9 @@ topic_init_age <- function(rec_data, ds_list, topic_num, degree_free_num) {
 #' The second dataframe column incidence_weight_sum is eid and the cumulative topic weights across all disease diagnoses.
 #' @export
 #'
-#' @examples new_weights <- loading2weights(HES_age_example)
+#' @examples
+#' set.seed(1)
+#' new_weights <- loading2weights(HES_age_example[1:1000,])
 loading2weights <- function(data, ds_list = UKB_349_disease, topics = UKB_HES_10topics){
   data <- data %>%
     filter(diag_icd10 %in% ds_list$diag_icd10)
@@ -606,16 +608,18 @@ update_beta_basic_lda <- function(para){
 #' cubic polynomial, spline with one knot, spline with two knots, and spline with three knots. Default is set to 3.), multiple_run_ELBO_compare (ELBO of each runs).
 #' @export
 #'
-#' @examples   HES_age_small_sample <- HES_age_example %>%
-#' dplyr::slice_sample(prop = 0.1)
-#' inference_results <- wrapper_ATM(HES_age_small_sample, topic_num = 10, CVB_num = 1)
+#' @examples
+#' # minimal, always-run example (tiny data/iterations)
+#' set.seed(1)
+#' inference_results <- wrapper_ATM(HES_age_example[1:1000,], topic_num = 2, CVB_num = 1)
+
 wrapper_ATM <- function(rec_data, topic_num = 10, degree_free_num = 3, CVB_num = 5, save_data = F){
   # check if disease only has one entry, remove them
-  print("Disease code that have only less than 20 entry will be removed.")
+  print("Disease code that have less than 5 entries will be removed.")
   ds_list_check <- rec_data %>%
     group_by(diag_icd10) %>%
     summarise(occ = n()) %>%
-    filter(occ >= 20)
+    filter(occ >= 5)
   rec_data <- rec_data %>%
     filter(diag_icd10 %in% ds_list_check$diag_icd10)
 

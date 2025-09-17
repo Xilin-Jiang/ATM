@@ -16,7 +16,7 @@ A data frame/tibble with example rows. Typical columns include:
 HES_icd10_example
 }
 \description{
-A tiny illustrative subset of HES diagnoses with participant IDs and ICD-10 codes.
+A realistic sized simulated HES diagnoses with participant IDs and ICD-10 codes.
 }
 \examples{
 head(HES_icd10_example)

@@ -3,7 +3,7 @@
 \docType{data}
 \name{SNOMED_ICD10CM}
 \alias{SNOMED_ICD10CM}
-\title{SNOMED ↔ ICD-10(-CM) mapping (excerpt)}
+\title{SNOMED <-> ICD-10(-CM) mapping (excerpt)}
 \format{
 A data frame/tibble. Common columns include:
 \describe{

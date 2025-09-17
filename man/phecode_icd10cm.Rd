@@ -3,7 +3,7 @@
 \docType{data}
 \name{phecode_icd10cm}
 \alias{phecode_icd10cm}
-\title{ICD-10-CM ↔ PheCode mapping}
+\title{ICD-10-CM <-> PheCode mapping}
 \format{
 A data frame/tibble. Common columns include:
 \describe{

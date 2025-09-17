@@ -1,5 +1,6 @@
 test_that("each step of the inference", {
   # ATM object initialization
+  set.seed(19940110)
   para <- topic_init_age(rec_data = HES_age_example, ds_list=UKB_349_disease, topic_num=10, degree_free_num= 5)
   # update the zn; each step should increase the lower bound
   lb1 <- CVB_lb(para)
@@ -13,6 +14,7 @@ test_that("each step of the inference", {
 })
 
 test_that("inference wrapper", {
+  set.seed(19940110)
   HES_age_small_sample <- HES_age_example %>%
     dplyr::slice_sample(prop = 0.1)
   inference_results <- wrapper_ATM(HES_age_small_sample, topic_num = 10, CVB_num = 1)

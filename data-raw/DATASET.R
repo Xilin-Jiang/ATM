@@ -4,7 +4,8 @@ usethis::use_import_from("dplyr", c("anti_join", "arrange", "group_by",
                                     "bind_rows", "filter", "left_join",
                                     "mutate", "n", "pull", "rename",
                                     "select", "slice", "summarise", "ungroup",
-                                    "data_frame", "if_else", "spread"))
+                                    "data_frame", "if_else"))
+usethis::use_import_from("tidyr", c("pivot_longer", "pivot_wider"))
 usethis::use_import_from("grDevices", "colorRampPalette")
 usethis::use_import_from("stats", c("binomial", "coef", "glm", "lm", "optim",
            "p.adjust", "pnorm", "quantile", "rexp", "rgamma", "rnorm",

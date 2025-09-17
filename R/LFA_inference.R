@@ -161,18 +161,9 @@ update_beta_lfa_with_prior <- function(para){
 #' ,multiple_run_ELBO_compare (ELBO of each runs).
 #' @export
 #'
-#' @examples   HES_age_small_sample <- HES_age_example %>%
-#' dplyr::slice_sample(prop = 0.1)
-#' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 10, CVB_num = 1)
+#' @examples   HES_age_small_sample <- HES_age_example[1:100,]
+#' inference_results <- wrapper_LFA(HES_age_small_sample, topic_num = 3, CVB_num = 1)
 wrapper_LFA <- function(rec_data, topic_num, CVB_num = 5, save_data = F, beta_prior_flag = F, topic_weight_prior=NULL){
-  print("Disease code that have less than 20 entry will be removed.")
-  ds_list_check <- rec_data %>%
-    group_by(diag_icd10) %>%
-    summarise(occ = n()) %>%
-    filter(occ >= 20)
-  rec_data <- rec_data %>%
-    filter(diag_icd10 %in% ds_list_check$diag_icd10)
-
   ds_list <- rec_data %>%
     group_by(diag_icd10) %>%
     summarise(occ = n())

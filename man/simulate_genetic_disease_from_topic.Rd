@@ -2,17 +2,7 @@
 % Please edit documentation in R/ATM_simulations.R
 \name{simulate_genetic_disease_from_topic}
 \alias{simulate_genetic_disease_from_topic}
-\title{Step 2 of the two step procedure to simulate Genetic-Disease-topic structure;
-output
-5 types of G-disease-topic structure
-3 sets of SNPs.
-\enumerate{
-\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1
-\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1
-\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1
-\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1
-\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1
-}}
+\title{Simulate genetic-disease-topic structure (step 2)}
 \usage{
 simulate_genetic_disease_from_topic(
   para,
@@ -27,51 +17,66 @@ simulate_genetic_disease_from_topic(
 )
 }
 \arguments{
-\item{para}{Simulated topic loadings; should be the first element of the output of simulate_topics.}
+\item{para}{Simulated topic parameters; the first element returned by \code{simulate_topics()}.}
 
-\item{genetics_population}{Simulated genotypes, should be the second element of the output of simulate_topics.}
+\item{genetics_population}{Simulated genotypes; the second element returned by \code{simulate_topics()}.}
 
-\item{causal_disease}{Simulated causal diseases, should be the third element of the output of simulate_topics.}
+\item{causal_disease}{Simulated causal disease; the third element returned by \code{simulate_topics()}.}
 
-\item{disease_number}{Number of diseases to simulate from the topic. The final number of disease will be disease_number + 5.}
+\item{disease_number}{Number of additional diseases to simulate from the topic.
+The total number of diseases will be \code{disease_number + 5}.}
 
-\item{ds_per_idv}{Number of disease per individual, default 6.1, which is the UKB number.}
+\item{ds_per_idv}{Mean number of diseases per individual (default \code{6.1}, as observed in UKB).}
 
-\item{itr_effect}{The simulated interaction effect, default set to 0.}
+\item{itr_effect}{Interaction effect size to simulate (default \code{0}).}
 
-\item{topic2disease}{Simulated topic to disease effect, default set to 2.}
+\item{topic2disease}{Topic-to-disease effect size (default \code{2}).}
 
-\item{v2t}{number of variant that have an effect on topic, has to be the same value as the previous simulate_topics function.}
+\item{v2t}{Number of variants that affect topic 1 (must match the value used in \code{simulate_topics()}).}
 
-\item{liability_thre}{Threshold of liability for simulating disease, which equal to proportion of individual set to be healthy, e.g. 0.8 means the
-top 20\% of liability is set to have the diseaes; default 0.8.}
+\item{liability_thre}{Liability threshold for simulating disease: the proportion set to \emph{healthy}.
+For example, \code{0.8} means the top 20\% of liability are set to \emph{diseased} (default \code{0.8}).}
 }
 \value{
-a list, the first element is the simulated disease data (the only element you actually need);
-the second element is a data list ; third element is the disease list (binary) representing #2 structure;
-fourth element is the disease list (binary) representing #3 structure.
+A list with four elements:
+\itemize{
+\item \code{rec_data}: Simulated disease records (primary output).
+\item \code{ds_list}: Auxiliary data objects used in the simulation.
+\item \code{interact_disease}: Binary disease outcomes for configuration 2.
+\item \code{pleiotropy_disease}: Binary disease outcomes for configuration 3.
+}
 }
 \description{
-Step 2 of the two step procedure to simulate Genetic-Disease-topic structure;
-output
-5 types of G-disease-topic structure
-3 sets of SNPs.
+Second step of the two-step simulation. Consumes outputs from
+\code{simulate_topics()} and generates disease outcomes under several
+genetic/topic-effect configurations.
+}
+\details{
+Five configurations across three SNP sets:
 \enumerate{
-\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1
-\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1
-\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1
-\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1
-\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1
+\item \strong{SNP -> disease -> topic}: SNP IDs 1-20; disease ID \code{para$D + 1}; topic ID 1.
+\item \strong{SNP * topic -> disease}: SNP IDs 41-60; disease ID \code{para$D + 2}; topic ID 1.
+\item \strong{SNP -> topic -> disease; SNP -> disease}: SNP IDs 21-(20 + v2t); disease ID \code{para$D + 3}; topic ID 1.
+\item \strong{SNP -> topic -> disease; SNP + SNP^2 -> disease}: SNP IDs 21-(20 + v2t); disease ID \code{para$D + 4}; topic ID 1.
+\item \strong{SNP -> topic + topic^2 -> disease; SNP -> disease}: SNP IDs 21-(20 + v2t); disease ID \code{para$D + 5}; topic ID 1.
 }
 }
 \examples{
-rslts <- simulate_topics(topic_number = 2,
-          pop_sz=1000, disease2topic  = 0.1, v2t = 20 )
-para_sim <- rslts[[1]]
+set.seed(1)
+# Minimal, fast example
+rslts <- simulate_topics(topic_number = 2, pop_sz = 1000,
+                         disease2topic = 0.1, v2t = 20)
+para_sim            <- rslts[[1]]
 genetics_population <- rslts[[2]]
-causal_disease <- rslts[[3]]
-reslt_ds <- simulate_genetic_disease_from_topic(para_sim, genetics_population,causal_disease,
-disease_number = 20, itr_effect = 1,
-topic2disease = 2, v2t = 20)
+causal_disease      <- rslts[[3]]
+
+reslt_ds <- simulate_genetic_disease_from_topic(
+  para_sim, genetics_population, causal_disease,
+  disease_number = 20, itr_effect = 1,
+  topic2disease = 2, v2t = 20
+)
 rec_data <- reslt_ds[[1]]
+}
+\seealso{
+\code{\link[=simulate_topics]{simulate_topics()}}
 }

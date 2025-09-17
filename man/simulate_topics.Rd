@@ -2,17 +2,7 @@
 % Please edit documentation in R/ATM_simulations.R
 \name{simulate_topics}
 \alias{simulate_topics}
-\title{Step 1 of the two step procedure to simulate Genetic-Disease-topic structure;
-all genetic effect are on the first topic only
-5 types of G-disease-topic structure
-3 sets of SNPs.
-\enumerate{
-\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1;
-\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1;
-\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1;
-\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1;
-\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1;
-}}
+\title{Simulate genetic-disease-topic structure (step 1)}
 \usage{
 simulate_topics(
   topic_number,
@@ -28,49 +18,66 @@ simulate_topics(
 \arguments{
 \item{topic_number}{Number of topics to simulate.}
 
-\item{num_snp}{Number of SNPs in the simulation, default is 100; no less than 60.}
+\item{num_snp}{Total number of SNPs (default 100; must be >= 60).}
 
-\item{pop_sz}{Number of individual to simulate, default set to 10,000.}
+\item{pop_sz}{Number of individuals (default 10,000).}
 
-\item{disease2topic}{Diseases to topic effect size, default set to 0;}
+\item{disease2topic}{Disease-to-topic effect size (default 0).}
 
-\item{v2t}{Number of variants that are effective on topic 1, should be set between 0 and 20; default 20.}
+\item{v2t}{Number of variants affecting topic 1 (0-20; default 20).}
 
-\item{snp2t}{Effect sizes of SNP to topic effect, default 0.04. (informed by real UKB data)}
+\item{snp2t}{SNP-to-topic effect size (default 0.04; informed by UKB).}
 
-\item{snp2d}{Effect sizes of SNP to disease effect, default 0.15.}
+\item{snp2d}{SNP-to-disease effect size (default 0.15).}
 
-\item{liability_thre}{Threshold of liability for simulating disease, which equal to proportion of individual set to be healthy, e.g. 0.8 means the
-top 20\% of liability is set to have the diseaes; default 0.8.}
+\item{liability_thre}{Liability threshold: proportion set to \emph{healthy}.
+For example, \code{0.8} means the top 20\% of liability are set to \emph{diseased}
+(default 0.8).}
 }
 \value{
-a list with three objects, each of it should be input to the simulate_genetic_disease_from_topic function;
-first is a para object, which saves the topic information; second one is the simulated genotypes;
-third is one simulated disease (binary) which is causal to the topic loading of the first topic.
+A list of length 3:
+\itemize{
+\item \code{para}: Topic parameters.
+\item \code{genetics_population}: Simulated genotype matrix.
+\item \code{causal_disease}: One simulated binary disease caused by loading on topic 1.
+}
 }
 \description{
-Step 1 of the two step procedure to simulate Genetic-Disease-topic structure;
-all genetic effect are on the first topic only
-5 types of G-disease-topic structure
-3 sets of SNPs.
+First step of a two-step procedure to simulate a genetic-disease-topic
+structure. In this step, all genetic effects act on topic 1.
+}
+\details{
+Five configurations across three SNP sets:
 \enumerate{
-\item SNP -> disease -> topic: SNP id: 1-20; disease id: para$D+1; topic id: 1;
-\item SNP*Topic -> disease: SNP id: 41-60; disease id: para$D + 2; topic id: 1;
-\item SNP -> Topic -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 3; topic id: 1;
-\item SNP -> Topic -> disease; SNP + SNP^2 -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 4; topic id: 1;
-\item SNP -> Topic + Topic^2 -> disease; SNP -> disease: SNP id: 21-(20+varying number(v2t)); disease id: para$D + 5; topic id: 1;
+\item \strong{SNP -> disease -> topic}: SNP IDs 1-20; disease ID \code{para$D + 1}; topic ID 1.
+\item \strong{SNP * topic -> disease}: SNP IDs 41-60; disease ID \code{para$D + 2}; topic ID 1.
+\item \strong{SNP -> topic -> disease; SNP -> disease}: SNP IDs 21-(20 + v2t); disease ID \code{para$D + 3}; topic ID 1.
+\item \strong{SNP -> topic -> disease; SNP + SNP^2 -> disease}: SNP IDs 21-(20 + v2t); disease ID \code{para$D + 4}; topic ID 1.
+\item \strong{SNP -> topic + topic^2 -> disease; SNP -> disease}: SNP IDs 21-(20 + v2t); disease ID \code{para$D + 5}; topic ID 1.
 }
 }
 \examples{
+set.seed(1)
 disease2topic <- 0
-cont_v2t <- 20
-rslts <- simulate_topics(topic_number = 2, pop_sz=1000,
-  disease2topic  = disease2topic, v2t = cont_v2t )
-para_sim <- rslts[[1]]
+v2t_small <- 20
+
+# Step 1: simulate topics (fast)
+rslts <- simulate_topics(
+  topic_number = 2, pop_sz = 1000,
+  disease2topic = disease2topic, v2t = v2t_small
+)
+para_sim            <- rslts[[1]]
 genetics_population <- rslts[[2]]
-causal_disease <- rslts[[3]]
-reslt_ds <- simulate_genetic_disease_from_topic(para_sim, genetics_population,causal_disease,
-disease_number = 20, itr_effect = 1,
-topic2disease = 2, v2t = 20)
+causal_disease      <- rslts[[3]]
+
+# Step 2 (optional): generate diseases from topics
+reslt_ds <- simulate_genetic_disease_from_topic(
+  para_sim, genetics_population, causal_disease,
+  disease_number = 20, itr_effect = 1,
+  topic2disease = 2, v2t = 20
+)
 rec_data <- reslt_ds[[1]]
+}
+\seealso{
+\code{\link[=simulate_genetic_disease_from_topic]{simulate_genetic_disease_from_topic()}}
 }
